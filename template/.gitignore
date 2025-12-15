@@ -1,0 +1,113 @@
+# OSX
+#
+.DS_Store
+
+# Xcode
+build/
+*.pbxuser
+!default.pbxuser
+*.mode1v3
+!default.mode1v3
+*.mode2v3
+!default.mode2v3
+*.perspectivev3
+!default.perspectivev3
+xcuserdata/
+*.xccheckout
+*.moved-aside
+DerivedData/
+*.hmap
+*.ipa
+*.xcuserstate
+**/.xcode.env.local
+ios/Pods/
+ios/build/
+
+# Android
+android/build/
+android/app/build/
+android/.idea/
+android/.cxx/
+android/.gradle/
+android/.kotlin/
+android/gradlew
+android/gradlew.bat
+android/local.properties
+.gradle/
+.cxx/
+*.hprof
+*.keystore
+!debug.keystore
+.kotlin/
+
+# Metro bundler
+.metro-health-check*
+.metro-cache/
+
+# Bundle artifacts
+*.jsbundle
+*.bundle
+
+# ===========================
+# Node.js / npm / Yarn
+# ===========================
+
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.pnp.*
+.yarn/*
+!.yarn/patches
+!.yarn/plugins
+!.yarn/releases
+!.yarn/sdks
+!.yarn/versions
+package-lock.json.ignore
+
+# ===========================
+# Environment & Secrets
+# ===========================
+
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+.env.*.local
+
+# ===========================
+# Testing & Coverage
+# ===========================
+
+coverage/
+.nyc_output/
+*.lcov
+
+# ===========================
+# Fastlane
+# ===========================
+
+**/fastlane/report.xml
+**/fastlane/Preview.html
+**/fastlane/screenshots
+**/fastlane/test_output
+
+# ===========================
+# Ruby / CocoaPods
+# ===========================
+
+**/Pods/
+/vendor/bundle/
+.bundle/
+
+# ===========================
+# Logs & Temporary Files
+# ===========================
+
+*.log
+*.tmp
+*.temp
+.cache/
+.parcel-cache/
+
