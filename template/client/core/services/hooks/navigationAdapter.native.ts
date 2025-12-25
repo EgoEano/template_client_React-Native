@@ -1,4 +1,4 @@
-import { useNavigation as useReactNavigation } from '@react-navigation/native';
+import { useNavigation as useReactNavigation, useRoute as useReactRoute } from '@react-navigation/native';
 
 export const useNavigation = () => {
     const navigation = useReactNavigation<any>();
@@ -16,4 +16,8 @@ export const useNavigation = () => {
         // Expose the original navigation object for advanced use
         _original: navigation,
     };
+};
+
+export const useRoute = () => {
+    return useReactRoute<any>();
 };

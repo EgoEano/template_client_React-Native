@@ -5,5 +5,6 @@ export interface NavigationAdapter {
 }
 
 declare const useNavigation: () => NavigationAdapter;
+declare const useRoute: () => { params: any; name: string; key: string };
 
-export { useNavigation };
+export { useNavigation, useRoute };

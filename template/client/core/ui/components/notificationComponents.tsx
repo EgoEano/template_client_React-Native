@@ -145,10 +145,9 @@ export function DialogView({
         >
             <View style={styles.confirmTextArea}>
                 {header && <Text
-                    colorVariant={'secondary'}
                     variant={'subtitle'}
                 >{header}</Text>}
-                <Text colorVariant={'secondary'}>{message}</Text>
+                <Text>{message}</Text>
             </View>
             <View style={styles.confirmButtonArea}>
                 {actions.map((action, index) => (

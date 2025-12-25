@@ -29,7 +29,6 @@ interface StyleProviderContext {
     selectTheme: (name: string) => void;
     add: (name: string, styleVariants: any) => void;
     addGroup: (group: Record<string, any>) => void;
-
 }
 
 type ScreenCategory = "compact" | "spacious";
@@ -103,7 +102,6 @@ export const StyleProvider = ({ children }: { children: ReactNode }) => {
             add(name, styleVariants);
         }
         updateUI();
-
     };
 
     const styles = useMemo<Record<string, Record<string, any>>>(() => {
@@ -134,6 +132,7 @@ export const StyleProvider = ({ children }: { children: ReactNode }) => {
     };
 
     const selectTheme = (name: string): boolean => {
+        if (currentThemeRef.current === name) return true;
         const tkns = themesContainerRef.current[name];
         if (!tkns) return false;
 
@@ -172,6 +171,10 @@ export const StyleProvider = ({ children }: { children: ReactNode }) => {
         return () => subscription?.remove();
     }, []);
 
+    useEffect(() => {
+        addTheme("default", templateTokens);
+        initTheme("default");
+    }, []);
 
     const value = useMemo<StyleProviderContext>(() => ({
         styles,

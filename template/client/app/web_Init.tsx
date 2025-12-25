@@ -69,7 +69,7 @@ function AppInit() {
     if (!ready) return <PlaceholderScreen name={"Loading..."} />;
 
     return (
-        <BrowserRouter>
+        <BrowserRouter basename={appRoot.serverBaseName}>
             <RootNavigator rootNode={appRoot}/>
         </BrowserRouter>
     );

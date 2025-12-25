@@ -152,7 +152,7 @@ export function Text({
 type Props_InputTextGroup = {
     container?: StyleProp<ViewStyle>;
     text?: StyleProp<TextStyle>;
-    placeholder?: StyleProp<ViewStyle>;
+    placeholder?: StyleProp<TextStyle>;
     focused?: StyleProp<ViewStyle>;
     error?: StyleProp<ViewStyle>;
 };
@@ -558,9 +558,11 @@ export function Card({
 //#endregion
 
 
+
 //#region FormContent
 type FormContentContextType = {
     values: Record<string, any>;
+    errors: Record<string, boolean>;
     handleChange: (value: any, key: string) => void;
     handleSubmit: (options?: any) => void;
     handleCancel: (options?: any) => void;
@@ -575,6 +577,7 @@ interface FormContentProps {
     isResetOnAction?: boolean;
     children?: React.ReactNode | ((args: {
         values: Record<string, any>;
+        errors: Record<string, boolean>;
         handleChange: (v: any, k: string) => void;
         handleSubmit: (options?: any) => void;
         handleCancel: (options?: any) => void;
@@ -593,6 +596,9 @@ type FormContentAction = {
 } | {
     type: 'reset';
     initial: Record<string, any>;
+} | {
+    type: 'update_errors';
+    errors: Record<string, boolean>;
 };
 
 const style_FormContent = StyleSheet.create({
@@ -619,6 +625,20 @@ const formReducer = (
     }
 };
 
+const errorsReducer = (
+    state: Record<string, boolean>,
+    action: FormContentAction
+) => {
+    switch (action.type) {
+        case 'update_errors':
+            return { ...action.errors };
+        case 'reset':
+            return {};
+        default:
+            return state;
+    }
+};
+
 const FormContentContext = createContext<FormContentContextType | null>(null);
 export const useFormContext = () => useContext(FormContentContext);
 
@@ -635,30 +655,49 @@ export function FormContent({
 }: FormContentProps) {
     const initial = useRef<Record<string, any>>(formData);
     const [values, dispatch] = useReducer(formReducer, formData);
+    const [errors, dispatchErrors] = useReducer(errorsReducer, {});
     const lastChangedKey = useRef<string | null>(null);
 
     const handleChange = (value: any, key: string) => {
         if (!key) return;
         lastChangedKey.current = key;
         dispatch({ type: 'update_field', key, value });
+
+        const rule = formDataRules[key];
+        const isValid = !rule || typeof rule !== 'function' || rule(value, { ...values, [key]: value });
+        const isDifferentFromInitial = initial.current[key] !== value;
+
+        const newErrors = { ...errors };
+        if (!isValid && isDifferentFromInitial) {
+            newErrors[key] = true;
+        } else {
+            delete newErrors[key];
+        }
+
+        dispatchErrors({ type: 'update_errors', errors: newErrors });
     };
 
     const validateData = (data: any, rules: any) => {
-        const errors: string[] = [];
-        Object.entries(data).forEach(([k, v]) => {
-            const rule = rules[k];
+        const errorsList: string[] = [];
+        const errorsObj: Record<string, boolean> = {};
+
+        Object.entries(rules).forEach(([k, rule]) => {
+            const v = data[k];
+
             if (
                 rule &&
                 typeof rule === 'function' &&
                 !rule(v, data)
             ) {
-                errors.push(k);
+                errorsList.push(k);
+                errorsObj[k] = true;
             }
         });
+        dispatchErrors({ type: 'update_errors', errors: errorsObj });
 
         return {
-            success: errors.length === 0,
-            errors: errors,
+            success: errorsList.length === 0,
+            errors: errorsList,
         }
     };
 
@@ -669,7 +708,7 @@ export function FormContent({
             options,
             validation,
         });
-        if (isResetOnAction) handleReset();
+        if (validation.success && isResetOnAction) handleReset();
     };
 
     const handleCancel = (options: any) => {
@@ -684,6 +723,7 @@ export function FormContent({
 
     const handleReset = () => {
         dispatch({ type: "reset", initial: initial.current });
+        dispatchErrors({ type: "reset", initial: {} });
     };
 
     const shallowEqual = useCallback((a: any, b: any) => {
@@ -708,12 +748,12 @@ export function FormContent({
     }, [values]);
 
     return (
-        <FormContentContext.Provider value={{ values, handleChange, handleSubmit, handleCancel }}>
+        <FormContentContext.Provider value={{ values, errors, handleChange, handleSubmit, handleCancel }}>
             <View
                 style={{ ...style_FormContent.main, ...style }}
                 {...props}
             >
-                {typeof children === "function" ? children({ values, handleChange, handleSubmit, handleCancel }) : children}
+                {typeof children === "function" ? children({ values, errors, handleChange, handleSubmit, handleCancel }) : children}
             </View>
         </FormContentContext.Provider>
     );

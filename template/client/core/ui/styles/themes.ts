@@ -76,7 +76,7 @@ export const createSemantics = (tokens: StyleTokens): StyleSemantics => ({
     colors: {
         text: {
             primary: tokens.colors.onPrimary,
-            secondary: tokens.colors.onBackground,
+            secondary: tokens.colors.onSecondary,
             success: tokens.colors.success,
             error: tokens.colors.error,
             disabled: tokens.colors.onDisabled,

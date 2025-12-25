@@ -8,6 +8,7 @@ declare global {
 
 export type RouteNode = {
     path: string;
+    serverBaseName?: string; // Use only in appRoot node for server base name
     mobileName?: string; // Optional: explicit mobile screen name (auto-generated if not provided)
     component?: React.ComponentType<any>;
     children?: RouteNode[];
