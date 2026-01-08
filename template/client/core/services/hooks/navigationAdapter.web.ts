@@ -1,4 +1,4 @@
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 
 export const useNavigation = () => {
     const navigate = useNavigate();
@@ -25,4 +25,9 @@ export const useNavigation = () => {
             }
         },
     };
+};
+
+export const useRoute = () => {
+    const [searchParams] = useSearchParams();
+    return Object.fromEntries(searchParams.entries());
 };
