@@ -1,26 +1,31 @@
-import type { StyleTokens, StyleSemantics, Theme, ComponentStyles } from "../../types/themeTypes";
+import type {
+    StyleTokens,
+    StyleSemantics,
+    Theme,
+    ComponentStyles,
+} from '../../types/themeTypes';
 
 export const templateTokens: StyleTokens = {
     colors: {
-        primary: "#1f1f1f",
-        primaryVariant: "#000000",
-        secondary: "#ffffff",
-        secondaryVariant: "#00004a",
+        primary: '#1f1f1f',
+        primaryVariant: '#000000',
+        secondary: '#ffffff',
+        secondaryVariant: '#00004a',
 
-        success: "#3CB371",
-        warning: "#e6cf00",
-        error: "#c23434",
+        success: '#3CB371',
+        warning: '#e6cf00',
+        error: '#c23434',
 
-        background: "#F5F6FA",
-        surface: "#FFFFFF",
-        disabled: "#CED0CE",
-        backdrop: "#1f1f1f",
+        background: '#F5F6FA',
+        surface: '#FFFFFF',
+        disabled: '#CED0CE',
+        backdrop: '#1f1f1f',
 
-        onPrimary: "#F5F6FA",
-        onSecondary: "#1f1f1f",
-        onBackground: "#1f1f1f",
-        onSurface: "#1f1f1f",
-        onDisabled: "#888888"
+        onPrimary: '#F5F6FA',
+        onSecondary: '#1f1f1f',
+        onBackground: '#1f1f1f',
+        onSurface: '#1f1f1f',
+        onDisabled: '#888888',
     },
     sizes: {
         spacing: {
@@ -28,24 +33,24 @@ export const templateTokens: StyleTokens = {
             sm: 8,
             md: 16,
             lg: 24,
-            xl: 32
+            xl: 32,
         },
         radius: {
             sm: 4,
             md: 12,
-            lg: 16
+            lg: 16,
         },
         borderWidth: {
             thin: 1,
-            thick: 3
+            thick: 3,
         },
         backdrop: {
             opacity: 0.8,
-            blur: 5
-        }
+            blur: 5,
+        },
     },
     typography: {
-        fontFamily: "System",
+        fontFamily: 'System',
         fontSize: {
             sm: 12,
             md: 16,
@@ -55,21 +60,21 @@ export const templateTokens: StyleTokens = {
         fontWeight: {
             regular: 400,
             medium: 500,
-            bold: 700
+            bold: 700,
         },
         lineHeight: {
             tight: 1.1,
             normal: 1.2,
-            relaxed: 1.3
-        }
+            relaxed: 1.3,
+        },
     },
     elevation: {
         level0: 0,
         level1: 2,
         level2: 4,
         level3: 8,
-        level4: 16
-    }
+        level4: 16,
+    },
 };
 
 export const createSemantics = (tokens: StyleTokens): StyleSemantics => ({
@@ -80,95 +85,106 @@ export const createSemantics = (tokens: StyleTokens): StyleSemantics => ({
             success: tokens.colors.success,
             error: tokens.colors.error,
             disabled: tokens.colors.onDisabled,
-            inverse: tokens.colors.onPrimary
+            inverse: tokens.colors.onPrimary,
         },
         surfaces: {
             base: tokens.colors.background,
             elevated: tokens.colors.surface,
-            sunken: tokens.colors.disabled
+            sunken: tokens.colors.disabled,
         },
         states: {
             focus: tokens.colors.primaryVariant,
             pressed: tokens.colors.secondaryVariant,
-            hovered: tokens.colors.secondary
+            hovered: tokens.colors.secondary,
         },
         borders: {
             default: tokens.colors.primary,
             focused: tokens.colors.primaryVariant,
-            error: tokens.colors.error
+            error: tokens.colors.error,
         },
         buttons: {
             primary: {
                 bg: tokens.colors.primary,
                 text: tokens.colors.onPrimary,
-                border: tokens.colors.primaryVariant
+                border: tokens.colors.primaryVariant,
             },
             secondary: {
                 bg: tokens.colors.secondary,
                 text: tokens.colors.onSecondary,
-                border: tokens.colors.secondaryVariant
+                border: tokens.colors.secondaryVariant,
             },
             success: {
                 bg: tokens.colors.success,
                 text: tokens.colors.onPrimary,
-                border: tokens.colors.success
+                border: tokens.colors.success,
             },
             error: {
                 bg: tokens.colors.error,
                 text: tokens.colors.onPrimary,
-                border: tokens.colors.error
+                border: tokens.colors.error,
             },
             disabled: {
                 bg: tokens.colors.disabled,
                 text: tokens.colors.onDisabled,
-                border: tokens.colors.disabled
-            }
+                border: tokens.colors.disabled,
+            },
         },
         overlays: {
             backdropColor: tokens.colors.backdrop,
             backdropOpacity: tokens.sizes.backdrop.opacity,
-            blur: tokens.sizes.backdrop.blur
-        }
+            blur: tokens.sizes.backdrop.blur,
+        },
     },
     sizes: {
         padding: {
             buttonSm: tokens.sizes.spacing.sm,
             buttonMd: tokens.sizes.spacing.md,
-            card: tokens.sizes.spacing.lg
+            card: tokens.sizes.spacing.lg,
         },
         radius: {
             button: tokens.sizes.radius.md,
             input: tokens.sizes.radius.md,
-            card: tokens.sizes.radius.lg
-        }
+            card: tokens.sizes.radius.lg,
+        },
     },
     typography: {
         title: {
             fontSize: tokens.typography.fontSize.xl,
             fontWeight: tokens.typography.fontWeight.bold,
-            lineHeight: tokens.typography.fontSize.xl * tokens.typography.lineHeight.relaxed
+            lineHeight:
+                tokens.typography.fontSize.xl *
+                (tokens.typography.lineHeight.relaxed ?? 1),
         },
         subtitle: {
             fontSize: tokens.typography.fontSize.lg,
             fontWeight: tokens.typography.fontWeight.bold,
-            lineHeight: tokens.typography.fontSize.lg * tokens.typography.lineHeight.relaxed
+            lineHeight:
+                tokens.typography.fontSize.lg *
+                (tokens.typography.lineHeight.relaxed ?? 1),
         },
         body: {
             fontSize: tokens.typography.fontSize.md,
             fontWeight: tokens.typography.fontWeight.medium,
-            lineHeight: tokens.typography.fontSize.md * tokens.typography.lineHeight.normal
+            lineHeight:
+                tokens.typography.fontSize.md *
+                (tokens.typography.lineHeight.normal ?? 1),
         },
         label: {
             fontSize: tokens.typography.fontSize.sm,
             fontWeight: tokens.typography.fontWeight.regular,
-            lineHeight: tokens.typography.fontSize.sm * tokens.typography.lineHeight.tight
-        }
-    }
+            lineHeight:
+                tokens.typography.fontSize.sm *
+                (tokens.typography.lineHeight.tight ?? 1),
+        },
+    },
 });
 
 const semantics: StyleSemantics = createSemantics(templateTokens);
 
-export const createComponents = (tokens: StyleTokens, semantics: StyleSemantics): ComponentStyles => ({
+export const createComponents = (
+    tokens: StyleTokens,
+    semantics: StyleSemantics,
+): ComponentStyles => ({
     button: {
         primary: {
             container: {
@@ -182,7 +198,7 @@ export const createComponents = (tokens: StyleTokens, semantics: StyleSemantics)
                 color: semantics.colors.buttons.primary.text,
                 fontSize: semantics.typography.body.fontSize,
                 fontWeight: semantics.typography.label.fontWeight,
-            }
+            },
         },
         secondary: {
             container: {
@@ -196,7 +212,7 @@ export const createComponents = (tokens: StyleTokens, semantics: StyleSemantics)
                 color: semantics.colors.buttons.secondary.text,
                 fontSize: semantics.typography.body.fontSize,
                 fontWeight: semantics.typography.label.fontWeight,
-            }
+            },
         },
         success: {
             container: {
@@ -210,7 +226,7 @@ export const createComponents = (tokens: StyleTokens, semantics: StyleSemantics)
                 color: semantics.colors.buttons.success.text,
                 fontSize: semantics.typography.body.fontSize,
                 fontWeight: semantics.typography.label.fontWeight,
-            }
+            },
         },
         error: {
             container: {
@@ -224,7 +240,7 @@ export const createComponents = (tokens: StyleTokens, semantics: StyleSemantics)
                 color: semantics.colors.buttons.error.text,
                 fontSize: semantics.typography.body.fontSize,
                 fontWeight: semantics.typography.label.fontWeight,
-            }
+            },
         },
         disabled: {
             container: {
@@ -238,8 +254,8 @@ export const createComponents = (tokens: StyleTokens, semantics: StyleSemantics)
                 color: semantics.colors.buttons.disabled.text,
                 fontSize: semantics.typography.label.fontSize,
                 fontWeight: semantics.typography.label.fontWeight,
-            }
-        }
+            },
+        },
     },
     card: {
         container: {
@@ -258,19 +274,17 @@ export const createComponents = (tokens: StyleTokens, semantics: StyleSemantics)
             color: semantics.colors.text.secondary,
             fontSize: semantics.typography.body.fontSize,
             lineHeight: semantics.typography.body.lineHeight,
-        }
+        },
     },
     input: {
         container: {
+            color: semantics.colors.text.primary,
+            fontSize: semantics.typography.body.fontSize,
             backgroundColor: semantics.colors.surfaces.base,
             borderRadius: semantics.sizes.radius.input,
             borderColor: semantics.colors.borders.default,
             borderWidth: tokens.sizes.borderWidth.thin,
             padding: tokens.sizes.spacing.md,
-        },
-        text: {
-            color: semantics.colors.text.primary,
-            fontSize: semantics.typography.body.fontSize,
         },
         placeholder: {
             color: semantics.colors.text.secondary,
@@ -281,7 +295,7 @@ export const createComponents = (tokens: StyleTokens, semantics: StyleSemantics)
         },
         errorBorder: {
             borderColor: semantics.colors.borders.error,
-        }
+        },
     },
     listItem: {
         container: {
@@ -299,11 +313,15 @@ export const createComponents = (tokens: StyleTokens, semantics: StyleSemantics)
         },
         icon: {
             color: semantics.colors.text.secondary,
-        }
+        },
     },
     modal: {
         overlay: {
-            backgroundColor: `${semantics.colors.overlays.backdropColor}${Math.round((semantics.colors.overlays.backdropOpacity) * 255).toString(16).padStart(2, '0')}`,
+            backgroundColor: `${semantics.colors.overlays.backdropColor}${Math.round(
+                semantics.colors.overlays.backdropOpacity * 255,
+            )
+                .toString(16)
+                .padStart(2, '0')}`,
             blur: semantics.colors.overlays.blur,
         },
         container: {
@@ -322,7 +340,7 @@ export const createComponents = (tokens: StyleTokens, semantics: StyleSemantics)
             color: semantics.colors.text.secondary,
             fontSize: semantics.typography.body.fontSize,
             lineHeight: semantics.typography.body.lineHeight,
-        }
+        },
     },
     text: {
         title: {
@@ -347,12 +365,12 @@ export const createComponents = (tokens: StyleTokens, semantics: StyleSemantics)
             color: semantics.colors.text.primary,
             fontSize: semantics.typography.label.fontSize,
             fontWeight: semantics.typography.label.fontWeight,
-        }
-    }
+        },
+    },
 });
 
-const theme: Theme = {
+export const theme: Theme = {
     tokens: templateTokens,
     semantics: semantics,
-    components: createComponents(templateTokens, semantics)
+    components: createComponents(templateTokens, semantics),
 };

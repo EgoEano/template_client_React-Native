@@ -1,19 +1,19 @@
 import React, { useMemo } from 'react';
 import { View, Text, ViewStyle } from 'react-native';
 import { NavigationContainer } from '@react-navigation/native';
-import { createNativeStackNavigator, NativeStackNavigationOptions } from '@react-navigation/native-stack';
-import { createDrawerNavigator, DrawerNavigationOptions } from '@react-navigation/drawer';
-import { createBottomTabNavigator, BottomTabNavigationOptions } from '@react-navigation/bottom-tabs';
+import { createNativeStackNavigator } from '@react-navigation/native-stack';
+import { createDrawerNavigator } from '@react-navigation/drawer';
+import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 
 import type { RouteNode, StackType } from '../core/types/types';
 import { useSystemData } from '../core/services/providers/systemDataProviderService';
 import { useStyleContext } from '../core/services/providers/styleProvider';
-import { normalizeMobileRoutes, getMobileScreenName } from '../core/utils/routeUtils';
+import {
+    normalizeMobileRoutes,
+    getMobileScreenName,
+} from '../core/utils/routeUtils';
 
 import appRoot from '../modules/routes';
-
-type ScreenOptions = NativeStackNavigationOptions | DrawerNavigationOptions | BottomTabNavigationOptions | undefined;
-
 
 export default function RootNavigator() {
     const { getSysValue } = useSystemData();
@@ -21,7 +21,10 @@ export default function RootNavigator() {
 
     // Normalize routes for mobile navigation (generates unique screen names)
     const normalizedAppRoot = useMemo(() => normalizeMobileRoutes(appRoot), []);
-    const RootScreenComponent = useMemo(() => createScreenComponent(normalizedAppRoot, getSysValue, styles), [getSysValue, styles]);
+    const RootScreenComponent = useMemo(
+        () => createScreenComponent(normalizedAppRoot, getSysValue, styles),
+        [getSysValue, styles, normalizedAppRoot],
+    );
 
     return (
         <NavigationContainer>
@@ -37,31 +40,37 @@ const renderStack = ({
     parentKey = '',
     defaultNavigatorType,
     defaultNavigatorScreenOptions,
-    styles
+    styles,
 }: {
-    node: RouteNode,
-    Stack?: any,
-    isRoot?: boolean,
-    parentKey?: string
-    defaultNavigatorType: StackType
-    defaultNavigatorScreenOptions: any,
-    styles: Record<string, Record<string, any>>
+    node: RouteNode;
+    Stack?: any;
+    isRoot?: boolean;
+    parentKey?: string;
+    defaultNavigatorType: StackType;
+    defaultNavigatorScreenOptions: any;
+    styles: Record<string, Record<string, any>>;
 }): React.ReactElement | null => {
     if (!node) {
-        return <PlaceholderScreen name="invalid_node" style={styles.flexCenterContainer} />;
+        return (
+            <PlaceholderScreen
+                name="invalid_node"
+                style={styles.flexCenterContainer}
+            />
+        );
     }
 
     if (Array.isArray(node.children) && node.children.length > 0) {
-        const stackType: StackType = node?.optionsNavigator?.type ?? defaultNavigatorType;
+        const stackType: StackType =
+            node?.optionsNavigator?.type ?? defaultNavigatorType;
 
         const sysScreenOptions = defaultNavigatorScreenOptions;
         const stackTypeScreenOptions =
-            (stackType && sysScreenOptions?.[stackType])
+            stackType && sysScreenOptions?.[stackType]
                 ? sysScreenOptions[stackType]
                 : {};
         const screenOptions = {
             ...stackTypeScreenOptions,
-            ...(node?.optionsNavigator ?? {})
+            ...(node?.optionsNavigator ?? {}),
         };
 
         const NestedStack = createNavigatorByType(stackType);
@@ -69,15 +78,16 @@ const renderStack = ({
         if (isRoot) {
             return (
                 <NestedStack.Navigator screenOptions={screenOptions}>
-                    {node.children.map((child) => renderStack({
-                        node: child,
-                        Stack: NestedStack,
-                        isRoot: false,
-                        parentKey: getMobileScreenName(node),
-                        defaultNavigatorType,
-                        defaultNavigatorScreenOptions,
-                        styles
-                    })
+                    {node.children.map((child) =>
+                        renderStack({
+                            node: child,
+                            Stack: NestedStack,
+                            isRoot: false,
+                            parentKey: getMobileScreenName(node),
+                            defaultNavigatorType,
+                            defaultNavigatorScreenOptions,
+                            styles,
+                        }),
                     )}
                 </NestedStack.Navigator>
             );
@@ -92,15 +102,16 @@ const renderStack = ({
             >
                 {() => (
                     <NestedStack.Navigator screenOptions={screenOptions}>
-                        {node.children!.map((child) => renderStack({
-                            node: child,
-                            Stack: NestedStack,
-                            isRoot: false,
-                            parentKey: `${parentKey}-${screenName}`,
-                            defaultNavigatorType,
-                            defaultNavigatorScreenOptions,
-                            styles
-                        })
+                        {node.children!.map((child) =>
+                            renderStack({
+                                node: child,
+                                Stack: NestedStack,
+                                isRoot: false,
+                                parentKey: `${parentKey}-${screenName}`,
+                                defaultNavigatorType,
+                                defaultNavigatorScreenOptions,
+                                styles,
+                            }),
                         )}
                     </NestedStack.Navigator>
                 )}
@@ -131,10 +142,12 @@ const renderStack = ({
 function createScreenComponent(
     node: RouteNode = { path: 'bad' },
     getSysValue: (key: string) => any | null,
-    styles: Record<string, Record<string, any>>
+    styles: Record<string, Record<string, any>>,
 ): React.ComponentType<any> {
     const defaultNavigatorType: StackType = getSysValue('defaultNavigatorType');
-    const defaultNavigatorScreenOptions = getSysValue('defaultNavigatorScreenOptions');
+    const defaultNavigatorScreenOptions = getSysValue(
+        'defaultNavigatorScreenOptions',
+    );
 
     return function ScreenComponentWrapper() {
         return renderStack({
@@ -144,21 +157,24 @@ function createScreenComponent(
             parentKey: '',
             defaultNavigatorType,
             defaultNavigatorScreenOptions,
-            styles
+            styles,
         });
-    }
+    };
 }
 
 function PlaceholderScreen({
     name,
-    style
-}: { name: string, style: ViewStyle }) {
+    style,
+}: {
+    name: string;
+    style: ViewStyle;
+}) {
     return (
         <View style={style}>
             <Text>{name}</Text>
         </View>
-    )
-};
+    );
+}
 
 function createNavigatorByType(type: StackType = 'stack') {
     switch (type) {

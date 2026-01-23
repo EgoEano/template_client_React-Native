@@ -10,9 +10,7 @@ const initialState: ExampleState = {
 
 const exampleSlice = createSlice({
     name: 'example',
-    initialState: {
-        example: '',
-    } as ExampleState,
+    initialState,
     reducers: {
         setExample: (state, action: PayloadAction<string>) => {
             state.example = action.payload;
@@ -20,7 +18,5 @@ const exampleSlice = createSlice({
     },
 });
 
-export const {
-    setExample,
-} = exampleSlice.actions;
+export const { setExample } = exampleSlice.actions;
 export default exampleSlice.reducer;

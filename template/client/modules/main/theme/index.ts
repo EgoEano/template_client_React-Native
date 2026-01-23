@@ -6,25 +6,25 @@ type DeepPartial<T> = {
 
 export const theme: DeepPartial<StyleTokens> = {
     colors: {
-        primary: "#1f1f1f",
-        primaryVariant: "#000000",
-        secondary: "#ffffff",
-        secondaryVariant: "#00004a",
+        primary: '#1f1f1f',
+        primaryVariant: '#000000',
+        secondary: '#ffffff',
+        secondaryVariant: '#00004a',
 
-        success: "#3CB371",
-        warning: "#e6cf00",
-        error: "#c23434",
+        success: '#3CB371',
+        warning: '#e6cf00',
+        error: '#c23434',
 
-        background: "#F5F6FA",
-        surface: "#FFFFFF",
-        disabled: "#CED0CE",
-        backdrop: "#1f1f1f",
+        background: '#F5F6FA',
+        surface: '#FFFFFF',
+        disabled: '#CED0CE',
+        backdrop: '#1f1f1f',
 
-        onPrimary: "#F5F6FA",
-        onSecondary: "#1f1f1f",
-        onBackground: "#1f1f1f",
-        onSurface: "#1f1f1f",
-        onDisabled: "#888888"
+        onPrimary: '#F5F6FA',
+        onSecondary: '#1f1f1f',
+        onBackground: '#1f1f1f',
+        onSurface: '#1f1f1f',
+        onDisabled: '#888888',
     },
     sizes: {
         spacing: {
@@ -46,7 +46,7 @@ export const theme: DeepPartial<StyleTokens> = {
         backdrop: {
             opacity: 0.7,
             blur: 5,
-        }
+        },
     },
     typography: {
         fontFamily: 'System',
@@ -65,7 +65,7 @@ export const theme: DeepPartial<StyleTokens> = {
             tight: 1.2,
             normal: 1.5,
             relaxed: 1.8,
-        }
+        },
     },
     elevation: {
         level0: 0,
@@ -73,30 +73,30 @@ export const theme: DeepPartial<StyleTokens> = {
         level2: 8,
         level3: 12,
         level4: 16,
-    }
+    },
 };
 
 export const darkTheme: DeepPartial<StyleTokens> = {
     ...theme,
     colors: {
-        primary: "#F5F6FA",
-        primaryVariant: "#FFFFFF",
-        secondary: "#1f1f1f",
-        secondaryVariant: "#000000",
+        primary: '#F5F6FA',
+        primaryVariant: '#FFFFFF',
+        secondary: '#1f1f1f',
+        secondaryVariant: '#000000',
 
-        success: "#3CB371",
-        warning: "#e6cf00",
-        error: "#c23434",
+        success: '#3CB371',
+        warning: '#e6cf00',
+        error: '#c23434',
 
-        background: "#1f1f1f",
-        surface: "#2b2b2b",
-        disabled: "#555555",
-        backdrop: "#000000",
+        background: '#1f1f1f',
+        surface: '#2b2b2b',
+        disabled: '#555555',
+        backdrop: '#000000',
 
-        onPrimary: "#1f1f1f",
-        onSecondary: "#F5F6FA",
-        onBackground: "#F5F6FA",
-        onSurface: "#F5F6FA",
-        onDisabled: "#AAAAAA"
-    }
+        onPrimary: '#1f1f1f',
+        onSecondary: '#F5F6FA',
+        onBackground: '#F5F6FA',
+        onSurface: '#F5F6FA',
+        onDisabled: '#AAAAAA',
+    },
 };

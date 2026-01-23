@@ -34,18 +34,19 @@ useEffect(() => {
 
 type Listener<T> = (payload: T) => void;
 type EventBus<T> = {
-  subscribe: (cb: Listener<T>) => () => void;
-  emit: (payload: T) => void;
+    subscribe: (cb: Listener<T>) => () => void;
+    emit: (payload: T) => void;
 };
 
-
 export function createEventProvider<T>() {
-
     const Context = createContext<EventBus<T> | null>(null);
 
     const useEventContext = () => {
         const ctx = useContext(Context);
-        if (!ctx) throw new Error('useEventContext must be used inside EventProvider');
+        if (!ctx)
+            throw new Error(
+                'useEventContext must be used inside EventProvider',
+            );
         return ctx;
     };
 
@@ -56,30 +57,27 @@ export function createEventProvider<T>() {
             subscribe: (cb: Listener<T>) => {
                 listeners.push(cb);
                 return () => {
-                    listeners = listeners.filter(fn => fn !== cb);
+                    listeners = listeners.filter((fn) => fn !== cb);
                 };
             },
             emit: (payload) => {
-                listeners.forEach(fn => fn(payload));
-            }
+                listeners.forEach((fn) => fn(payload));
+            },
         };
-    }        
-    
+    };
+
     const EventProvider = ({ children }: { children: React.ReactNode }) => {
         const eventBusRef = useRef(createEventBus());
 
         return (
-            <Context.Provider value={
-                eventBusRef.current
-            }>
+            <Context.Provider value={eventBusRef.current}>
                 {children}
             </Context.Provider>
         );
-    }
+    };
 
     return {
         EventProvider,
         useEventContext,
     };
-
 }

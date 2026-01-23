@@ -1,12 +1,29 @@
-import React, { createContext, useContext, useEffect, useRef, useState } from "react";
-import { DialogView, NotifyView } from "../../ui/components/notificationComponents";
+import React, {
+    createContext,
+    useContext,
+    useEffect,
+    useRef,
+    useState,
+} from 'react';
+import {
+    DialogView,
+    NotifyView,
+} from '../../ui/components/notificationComponents';
 
-import type { NotificationProviderContextType, NotificationProviderProps, NotifyItem, DialogItem } from "../../types/notificationTypes";
+import type {
+    NotificationProviderContextType,
+    NotificationProviderProps,
+    NotifyItem,
+    DialogItem,
+} from '../../types/notificationTypes';
 
+const NotifyContext = createContext<NotificationProviderContextType | null>(
+    null,
+);
 
-const NotifyContext = createContext<NotificationProviderContextType | null>(null);
-
-export const NotificationProvider: React.FC<NotificationProviderProps> = ({ children }) => {
+export const NotificationProvider: React.FC<NotificationProviderProps> = ({
+    children,
+}) => {
     const MAX_STACK_SIZE: number = 3;
     const NOTIFY_TIMEOUT_SECONDS = 7;
 
@@ -16,7 +33,7 @@ export const NotificationProvider: React.FC<NotificationProviderProps> = ({ chil
     const [currentNotify, setCurrentNotify] = useState<NotifyItem[]>([]);
     const [currentDialog, setCurrentDialog] = useState<DialogItem | null>(null);
 
-    const pushNotify = (item: Omit<NotifyItem, "id">) => {
+    const pushNotify = (item: Omit<NotifyItem, 'id'>) => {
         const fullItem: NotifyItem = {
             ...item,
             id: String(Math.random() * 1000),
@@ -25,24 +42,26 @@ export const NotificationProvider: React.FC<NotificationProviderProps> = ({ chil
         if (currentNotify.length >= MAX_STACK_SIZE) {
             notifyQueue.current.push(fullItem);
         } else {
-            setCurrentNotify(q => [...q, fullItem])
+            setCurrentNotify((q) => [...q, fullItem]);
         }
     };
 
     const removeNotify = (id: string) => {
-        setCurrentNotify(q => q.filter(n => n.id !== id));
+        setCurrentNotify((q) => q.filter((n) => n.id !== id));
     };
 
-    const pushDialog = (item: Omit<DialogItem, "resolve">): Promise<boolean> => {
-        return new Promise(resolve => {
+    const pushDialog = (
+        item: Omit<DialogItem, 'resolve'>,
+    ): Promise<boolean> => {
+        return new Promise((resolve) => {
             const fullItem: DialogItem = {
                 ...item,
-                resolve
+                resolve,
             };
             if (currentDialog) {
                 dialogQueue.current.push(fullItem);
             } else {
-                setCurrentDialog(fullItem)
+                setCurrentDialog(fullItem);
             }
         });
     };
@@ -50,10 +69,13 @@ export const NotificationProvider: React.FC<NotificationProviderProps> = ({ chil
     const removeDialog = () => setCurrentDialog(null);
 
     useEffect(() => {
-        if (currentNotify.length < MAX_STACK_SIZE && notifyQueue.current.length > 0) {
+        if (
+            currentNotify.length < MAX_STACK_SIZE &&
+            notifyQueue.current.length > 0
+        ) {
             const nextNotify = notifyQueue.current.shift();
             if (nextNotify) {
-                setCurrentNotify(q => [...q, nextNotify]);
+                setCurrentNotify((q) => [...q, nextNotify]);
             }
         }
     }, [currentNotify]);
@@ -67,30 +89,34 @@ export const NotificationProvider: React.FC<NotificationProviderProps> = ({ chil
         }
     }, [currentDialog]);
 
-
     const value = {
         pushNotify,
-        pushDialog
+        pushDialog,
     };
 
     return (
         <NotifyContext.Provider value={value}>
             {children}
-            {currentDialog && <DialogView item={currentDialog} handleClose={removeDialog} />}
-            {currentNotify.length > 0 && <NotifyView
-                queue={currentNotify}
-                timeout={NOTIFY_TIMEOUT_SECONDS}
-                handleClose={removeNotify}
-            />}
+            {currentDialog && (
+                <DialogView item={currentDialog} handleClose={removeDialog} />
+            )}
+            {currentNotify.length > 0 && (
+                <NotifyView
+                    queue={currentNotify}
+                    timeout={NOTIFY_TIMEOUT_SECONDS}
+                    handleClose={removeNotify}
+                />
+            )}
         </NotifyContext.Provider>
     );
-}
+};
 
 export const useNotification = (): NotificationProviderContextType => {
     const context = useContext(NotifyContext);
     if (!context) {
-        throw new Error("useNotification must be used within a NotificationProvider");
+        throw new Error(
+            'useNotification must be used within a NotificationProvider',
+        );
     }
     return context;
 };
-

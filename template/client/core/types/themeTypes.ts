@@ -1,3 +1,5 @@
+import type { ViewStyle, TextStyle } from 'react-native';
+
 //#region Tokens
 export type ColorTokens = {
     // base colors
@@ -57,15 +59,15 @@ export type TypographyTokens = {
     };
 
     fontWeight: {
-        regular: number;
-        medium: number;
-        bold: number;
+        regular: TextStyle['fontWeight'];
+        medium: TextStyle['fontWeight'];
+        bold: TextStyle['fontWeight'];
     };
 
     lineHeight: {
-        tight: number;
-        normal: number;
-        relaxed: number;
+        tight: TextStyle['lineHeight'];
+        normal: TextStyle['lineHeight'];
+        relaxed: TextStyle['lineHeight'];
     };
 };
 
@@ -158,22 +160,22 @@ export type SizeSemantics = {
 export type TypographySemantics = {
     title: {
         fontSize: number;
-        fontWeight: number;
+        fontWeight: TextStyle['fontWeight'];
         lineHeight: number;
     };
     subtitle: {
         fontSize: number;
-        fontWeight: number;
+        fontWeight: TextStyle['fontWeight'];
         lineHeight: number;
     };
     body: {
         fontSize: number;
-        fontWeight: number;
+        fontWeight: TextStyle['fontWeight'];
         lineHeight: number;
     };
     label: {
         fontSize: number;
-        fontWeight: number;
+        fontWeight: TextStyle['fontWeight'];
         lineHeight: number;
     };
 };
@@ -189,60 +191,59 @@ export type StyleSemantics = {
 export type ComponentStyles = {
     button: {
         primary: {
-            container: any;
-            text: any;
+            container: ViewStyle;
+            text: TextStyle;
         };
         secondary: {
-            container: any;
-            text: any;
+            container: ViewStyle;
+            text: TextStyle;
         };
         success: {
-            container: any;
-            text: any;
+            container: ViewStyle;
+            text: TextStyle;
         };
         error: {
-            container: any;
-            text: any;
+            container: ViewStyle;
+            text: TextStyle;
         };
         disabled: {
-            container: any;
-            text: any;
+            container: ViewStyle;
+            text: TextStyle;
         };
     };
 
     card: {
-        container: any;
-        title: any;
-        content: any;
+        container: ViewStyle;
+        title: TextStyle;
+        content: TextStyle | ViewStyle;
     };
 
     input: {
-        container: any;
-        text: any;
-        placeholder: any;
-        focusedBorder: any;
-        errorBorder: any;
+        container: TextStyle;
+        placeholder: TextStyle;
+        focusedBorder: ViewStyle;
+        errorBorder: ViewStyle;
     };
 
     listItem: {
-        container: any;
-        title: any;
-        subtitle: any;
-        icon: any;
+        container: ViewStyle;
+        title: TextStyle;
+        subtitle: TextStyle;
+        icon: TextStyle | ViewStyle;
     };
 
     modal: {
-        overlay: any;
-        container: any;
-        title: any;
-        content: any;
+        overlay: ViewStyle & { blur?: number };
+        container: ViewStyle;
+        title: TextStyle;
+        content: TextStyle | ViewStyle;
     };
 
     text: {
-        title: any;
-        subtitle: any;
-        body: any;
-        label: any;
+        title: TextStyle;
+        subtitle: TextStyle;
+        body: TextStyle;
+        label: TextStyle;
     };
 };
 

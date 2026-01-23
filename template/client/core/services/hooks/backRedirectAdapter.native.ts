@@ -1,8 +1,16 @@
 // Native (React Native) implementation of back redirect adapter
 // Uses React Native's BackHandler, Platform, and ToastAndroid
 
-import { BackHandler as RNBackHandler, Platform as RNPlatform, ToastAndroid } from 'react-native';
-import type { BackHandlerAdapter, PlatformAdapter, ToastAdapter } from './backRedirectAdapter';
+import {
+    BackHandler as RNBackHandler,
+    Platform as RNPlatform,
+    ToastAndroid,
+} from 'react-native';
+import type {
+    BackHandlerAdapter,
+    PlatformAdapter,
+    ToastAdapter,
+} from './backRedirectAdapter';
 
 export const BackHandler: BackHandlerAdapter = RNBackHandler;
 export const Platform: PlatformAdapter = RNPlatform as PlatformAdapter;

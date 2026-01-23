@@ -1,5 +1,11 @@
-import React, { createContext, useContext, useState, useEffect, useCallback, useRef } from 'react';
-
+import React, {
+    createContext,
+    useContext,
+    useState,
+    useEffect,
+    useCallback,
+    useRef,
+} from 'react';
 
 // export const {
 //   DataProvider: NameProvider,
@@ -16,7 +22,6 @@ import React, { createContext, useContext, useState, useEffect, useCallback, use
 */
 
 //const { data, filters, error, isLoading, updateFilters, refresh } = nameContext();
-
 
 export interface DataProviderContextType<T, F = Record<string, any>> {
     data: T[];
@@ -40,7 +45,10 @@ export function createDataProvider<T, F = Record<string, any>>() {
 
     const useDataContext = () => {
         const ctx = useContext(Context);
-        if (!ctx) throw new Error('useDataContext must be used within its DataProvider');
+        if (!ctx)
+            throw new Error(
+                'useDataContext must be used within its DataProvider',
+            );
         return ctx;
     };
 
@@ -48,7 +56,7 @@ export function createDataProvider<T, F = Record<string, any>>() {
         children,
         initialFilters = {} as F,
         initialData = null,
-        fetchFn
+        fetchFn,
     }) => {
         const [data, setData] = useState<T[]>(initialData ?? []);
         const fetchFnRef = useRef(fetchFn);
@@ -65,7 +73,10 @@ export function createDataProvider<T, F = Record<string, any>>() {
                 if (!fetchFnRef.current) return;
                 setLoading(true);
                 try {
-                    const result = await fetchFnRef.current({ ...filters, ...customFilters } as F);
+                    const result = await fetchFnRef.current({
+                        ...filters,
+                        ...customFilters,
+                    } as F);
                     setData(result);
                 } catch (err) {
                     setData([]);
@@ -74,12 +85,11 @@ export function createDataProvider<T, F = Record<string, any>>() {
                     setLoading(false);
                 }
             },
-            [filters, fetchFn]
+            [filters],
         );
 
         useEffect(() => {
             refresh();
-            // eslint-disable-next-line react-hooks/exhaustive-deps
         }, [refresh]);
 
         const updateFilters = (newFilters: Partial<F>) => {
@@ -95,7 +105,7 @@ export function createDataProvider<T, F = Record<string, any>>() {
                     error,
                     isLoading,
                     updateFilters,
-                    refresh
+                    refresh,
                 }}
             >
                 {children}

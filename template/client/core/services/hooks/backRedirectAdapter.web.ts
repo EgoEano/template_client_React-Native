@@ -3,11 +3,19 @@
  * Provides browser-compatible stubs and implementations where possible
  */
 
-import type { BackHandlerAdapter, PlatformAdapter, ToastAdapter, BackHandlerSubscription } from './backRedirectAdapter';
+import type {
+    BackHandlerAdapter,
+    PlatformAdapter,
+    ToastAdapter,
+    BackHandlerSubscription,
+} from './backRedirectAdapter';
 
 // Uses browser's popstate event to handle back button
 export const BackHandler: BackHandlerAdapter = {
-    addEventListener: (eventName: string, handler: () => boolean): BackHandlerSubscription => {
+    addEventListener: (
+        eventName: string,
+        handler: () => boolean,
+    ): BackHandlerSubscription => {
         if (eventName === 'hardwareBackPress') {
             // On web, we intercept the browser's back button using popstate
             const popstateHandler = (event: PopStateEvent) => {
@@ -31,7 +39,7 @@ export const BackHandler: BackHandlerAdapter = {
         }
 
         return {
-            remove: () => { },
+            remove: () => {},
         };
     },
 
@@ -53,5 +61,5 @@ export const Toast: ToastAdapter = {
         }
     },
     SHORT: 2000, // 2 seconds
-    LONG: 3500,  // 3.5 seconds
+    LONG: 3500, // 3.5 seconds
 };

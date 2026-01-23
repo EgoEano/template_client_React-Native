@@ -1,3 +1,4 @@
+import type React from 'react';
 import type { NativeStackNavigationOptions } from '@react-navigation/native-stack';
 
 declare global {
@@ -8,16 +9,16 @@ declare global {
 
 export type RouteNode = {
     path: string;
-    serverBaseName?: string; // Use only in appRoot node for server base name
-    mobileName?: string; // Optional: explicit mobile screen name (auto-generated if not provided)
-    component?: React.ComponentType<any>;
+    serverBasePath?: string; // Use only in appRoot node for server base name
+    name?: string; // Optional: explicit mobile screen name (auto-generated if not provided)
+    component?: React.ComponentType<unknown>;
     children?: RouteNode[];
     optionsNavigator?: NavigatorOptions;
-    options?: any;
+    options?: unknown;
 };
 
 export type StackType = 'stack' | 'tabs' | 'drawer' | null | undefined;
 export type NavigatorOptions = {
-    type: StackType,
+    type: StackType;
     options: NativeStackNavigationOptions;
 };

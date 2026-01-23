@@ -6,8 +6,8 @@ const styles: { [key: string]: ViewStyle | TextStyle } = {
     },
     flexCenterContainer: {
         flex: 1,
-        alignItems: 'center', 
-        justifyContent: 'center'
+        alignItems: 'center',
+        justifyContent: 'center',
     },
     statusBar: {
         color: '#00000050',

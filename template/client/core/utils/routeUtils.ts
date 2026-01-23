@@ -3,7 +3,7 @@ import type { RouteNode } from '../types/types';
 /**
  * Generates a unique mobile screen name for a route node.
  * Handles empty paths by creating unique identifiers based on hierarchy.
- * 
+ *
  * @param node - The route node
  * @param parentPath - The accumulated parent path (for hierarchy tracking)
  * @param index - The index of this node among siblings
@@ -12,11 +12,11 @@ import type { RouteNode } from '../types/types';
 export function generateMobileName(
     node: RouteNode,
     parentPath: string = '',
-    index: number = 0
+    index: number = 0,
 ): string {
     // If explicitly set, use it
-    if (node.mobileName) {
-        return node.mobileName;
+    if (node.name) {
+        return node.name;
     }
 
     // If path is empty, generate a unique name
@@ -27,7 +27,9 @@ export function generateMobileName(
         }
 
         // Nested empty path - use parent path + index
-        const cleanParentPath = parentPath.replace(/\//g, '_').replace(/^_/, '');
+        const cleanParentPath = parentPath
+            .replace(/\//g, '_')
+            .replace(/^_/, '');
         return `_${cleanParentPath}_index${index > 0 ? index : ''}`;
     }
 
@@ -38,16 +40,16 @@ export function generateMobileName(
 /**
  * Normalizes a route tree for mobile navigation by assigning unique screen names.
  * This allows using empty paths for web while ensuring unique names for mobile.
- * 
+ *
  * @param node - The root route node
  * @param parentPath - Internal: accumulated parent path
- * @returns A new route tree with mobileName assigned to all nodes
+ * @returns A new route tree with name assigned to all nodes
  */
 export function normalizeMobileRoutes(
     node: RouteNode,
-    parentPath: string = ''
+    parentPath: string = '',
 ): RouteNode {
-    const mobileName = generateMobileName(node, parentPath, 0);
+    const name = generateMobileName(node, parentPath, 0);
 
     // Build the current full path for children
     const currentPath = parentPath
@@ -55,27 +57,27 @@ export function normalizeMobileRoutes(
         : node.path;
 
     // Process children if they exist
-    const children = node.children?.map((child, index) =>
+    const children = node.children?.map((child) =>
         normalizeMobileRoutes(
             child,
-            currentPath || '_' // If current path is empty, use '_' as parent identifier
-        )
+            currentPath || '_', // If current path is empty, use '_' as parent identifier
+        ),
     );
 
     return {
         ...node,
-        mobileName,
-        children
+        name,
+        children,
     };
 }
 
 /**
  * Gets the mobile screen name for a route node.
- * Returns mobileName if set, otherwise returns the path.
- * 
+ * Returns name if set, otherwise returns the path.
+ *
  * @param node - The route node
  * @returns The screen name to use for mobile navigation
  */
 export function getMobileScreenName(node: RouteNode): string {
-    return node.mobileName || node.path || '_unnamed';
+    return node.name || node.path || '_unnamed';
 }

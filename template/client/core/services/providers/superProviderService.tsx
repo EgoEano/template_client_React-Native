@@ -1,4 +1,4 @@
-import React, { ReactNode } from "react";
+import React, { ReactNode } from 'react';
 import { LanguageProvider } from './languageProviderService';
 import { SystemDataProvider } from './systemDataProviderService';
 import { StyleProvider } from './styleProvider';
@@ -12,9 +12,7 @@ export function SuperProvider({ children }: { children: ReactNode }) {
                 <StyleProvider>
                     <LanguageProvider>
                         <NotificationProvider>
-                            <StorageProvider>
-                                {children}
-                            </StorageProvider>
+                            <StorageProvider>{children}</StorageProvider>
                         </NotificationProvider>
                     </LanguageProvider>
                 </StyleProvider>

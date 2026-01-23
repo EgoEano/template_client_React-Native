@@ -3,31 +3,40 @@ import { useNavigation } from './navigationAdapter';
 import { BackHandler, Platform, Toast } from './backRedirectAdapter';
 
 export function useBackRedirect(targetRoute: string) {
-    let isNavigating = false;
+    const isNavigatingRef = useRef(false);
     const navigation = useNavigation();
 
     useEffect(() => {
-        const backHandler = BackHandler.addEventListener('hardwareBackPress', () => {
-            if (!isNavigating && targetRoute?.length > 0) {
-                isNavigating = true;
-                navigation.navigate(targetRoute);
-                setTimeout(() => (isNavigating = false), 500);
-            }
-            return true;
-        });
+        const backHandler = BackHandler.addEventListener(
+            'hardwareBackPress',
+            () => {
+                if (!isNavigatingRef.current && targetRoute?.length > 0) {
+                    isNavigatingRef.current = true;
+                    navigation.navigate(targetRoute);
+                    setTimeout(() => (isNavigatingRef.current = false), 500);
+                }
+                return true;
+            },
+        );
 
         // For native, use the addListener from original navigation
         // For web, this will be undefined and won't cause issues
         const unsubscribe = (navigation as any)._original?.addListener
-            ? (navigation as any)._original.addListener('beforeRemove', (e: any) => {
-                if (!isNavigating && targetRoute?.length > 0) {
-                    e.preventDefault();
-                    isNavigating = true;
-                    navigation.navigate(targetRoute);
-                    setTimeout(() => (isNavigating = false), 500);
-                }
-            })
-            : () => { };
+            ? (navigation as any)._original.addListener(
+                  'beforeRemove',
+                  (e: any) => {
+                      if (!isNavigatingRef.current && targetRoute?.length > 0) {
+                          e.preventDefault();
+                          isNavigatingRef.current = true;
+                          navigation.navigate(targetRoute);
+                          setTimeout(
+                              () => (isNavigatingRef.current = false),
+                              500,
+                          );
+                      }
+                  },
+              )
+            : () => {};
 
         return () => {
             backHandler.remove();
@@ -43,7 +52,10 @@ export function useBackIntercept(callback: () => void) {
             return true;
         };
 
-        const subscription = BackHandler.addEventListener('hardwareBackPress', handler);
+        const subscription = BackHandler.addEventListener(
+            'hardwareBackPress',
+            handler,
+        );
 
         return () => subscription.remove();
     }, [callback]);
@@ -75,9 +87,10 @@ export function useBackExit(fallbackRoute: string) {
     }, [fallbackRoute, navigation]);
 
     useEffect(() => {
-        const subscription = BackHandler.addEventListener('hardwareBackPress', onBackPress);
+        const subscription = BackHandler.addEventListener(
+            'hardwareBackPress',
+            onBackPress,
+        );
         return () => subscription.remove();
     }, [onBackPress]);
 }
-
-

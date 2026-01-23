@@ -1,7 +1,6 @@
-import type { ReactNode } from "react";
+import type { ReactNode } from 'react';
 
-
-export type NotifyItemTypes = "success" | "error" | "info";
+export type NotifyItemTypes = 'success' | 'error' | 'info';
 export interface NotifyItem {
     id: string;
     type: NotifyItemTypes;
@@ -24,8 +23,8 @@ export interface DialogItem {
 }
 
 export interface NotificationProviderContextType {
-    pushNotify: (item: Omit<NotifyItem, "id">) => void;
-    pushDialog: (item: Omit<DialogItem, "resolve">) => Promise<boolean>;
+    pushNotify: (item: Omit<NotifyItem, 'id'>) => void;
+    pushDialog: (item: Omit<DialogItem, 'resolve'>) => Promise<boolean>;
 }
 
 export interface NotificationProviderProps {

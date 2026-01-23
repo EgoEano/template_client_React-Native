@@ -1,37 +1,36 @@
-import React, { useEffect, useState, Suspense, lazy } from "react";
-import ReactDOM from "react-dom/client";
-import { StyleSheet, View, Text } from "react-native";
-import { BrowserRouter } from "react-router-dom";
+import { useEffect, useRef, useState } from 'react';
+import ReactDOM from 'react-dom/client';
+import { StyleSheet, View, Text } from 'react-native';
+import { BrowserRouter } from 'react-router-dom';
 
-import { SuperProvider } from "../core/services/providers/superProviderService";
-import { useSystemData } from "../core/services/providers/systemDataProviderService";
-import { useLanguage } from "../core/services/providers/languageProviderService";
-import { useStyleContext } from "../core/services/providers/styleProvider";
-import { RootNavigator } from "./web_Navigation";
+import { SuperProvider } from '../core/services/providers/superProviderService';
+import { useSystemData } from '../core/services/providers/systemDataProviderService';
+import { useLanguage } from '../core/services/providers/languageProviderService';
+import { useStyleContext } from '../core/services/providers/styleProvider';
+import { RootNavigator } from './web_Navigation';
+import config from '../../app.json';
 
-import appRoot from "../modules/routes";
+import appRoot from '../modules/routes';
 
-
-import type { ViewStyle } from "react-native";
-
+import type { ViewStyle } from 'react-native';
 
 const gstyles: Record<string, ViewStyle> = {
     name: {
-        display: 'flex'
+        display: 'flex',
     },
 };
 const languages = {
-    "en-US": {}
+    'en-US': {},
 };
 
 export function InitWebRoot(): ReactDOM.Root {
-    let appNode = document.getElementById("app");
+    let appNode = document.getElementById('app');
     if (!appNode) {
         appNode = document.createElement('div');
         appNode.id = 'app';
         document.body.appendChild(appNode);
     }
-    document.title = 'App';	
+    document.title = 'App';
 
     appNode.style.display = 'flex';
     appNode.style.minHeight = '100vh';
@@ -40,7 +39,7 @@ export function InitWebRoot(): ReactDOM.Root {
     appNode.style.fontSize = '1rem';
     //appNode.style.fontFamily = style.main.fontFamily;
     appNode.style.backgroundColor = '#fff';
-    
+
     return ReactDOM.createRoot(appNode);
 }
 
@@ -53,49 +52,55 @@ export function AppWeb() {
 }
 
 function AppInit() {
-    const { setSysValue, setSysValues } = useSystemData();
+    const { setSysValues, setSysValue } = useSystemData();
     const { setLanguagePack } = useLanguage();
     const { addGroup } = useStyleContext();
+
     const [ready, setReady] = useState(false);
+    const initializedRef = useRef(false);
 
     useEffect(() => {
-        addGroup(StyleSheet.create(gstyles));
-        setLanguagePack(languages["en-US"]);
-        setSysValues(initSysValues());
-        //setSysValue("config", Config);
-        setReady(true);
-    }, []);
+        if (initializedRef.current) return;
+        initializedRef.current = true;
 
-    if (!ready) return <PlaceholderScreen name={"Loading..."} />;
+        addGroup(StyleSheet.create(gstyles));
+        setLanguagePack(languages['en-US']);
+        setSysValues(initSysValues());
+        setSysValue('config', config);
+        setReady(true);
+    }, [addGroup, setLanguagePack, setSysValues, setSysValue]);
+
+    if (!ready) return <PlaceholderScreen name={'Loading...'} />;
 
     return (
-        <BrowserRouter basename={appRoot.serverBaseName}>
-            <RootNavigator rootNode={appRoot}/>
+        <BrowserRouter basename={appRoot.serverBasePath}>
+            <RootNavigator rootNode={appRoot} />
         </BrowserRouter>
     );
 }
 
 function initSysValues() {
-    return {
-    }
+    return {};
 }
 
-function PlaceholderScreen({ 
-    name, 
-    style 
-}: { 
-    name: string, 
-    style?: ViewStyle 
+function PlaceholderScreen({
+    name,
+    style,
+}: {
+    name: string;
+    style?: ViewStyle;
 }) {
     return (
-        <View style={{
-            display: 'flex',
-            justifyContent: 'center',
-            alignContent: 'center',
-            alignItems: 'center',
-            ...style
-        }}>
+        <View
+            style={{
+                display: 'flex',
+                justifyContent: 'center',
+                alignContent: 'center',
+                alignItems: 'center',
+                ...style,
+            }}
+        >
             <Text>{name}</Text>
         </View>
-    )
-};
+    );
+}

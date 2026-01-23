@@ -12,7 +12,10 @@ export interface BackHandlerAdapter {
      * @param handler - Handler function that returns true to prevent default behavior
      * @returns Subscription object with remove() method
      */
-    addEventListener(eventName: string, handler: () => boolean): BackHandlerSubscription;
+    addEventListener(
+        eventName: string,
+        handler: () => boolean,
+    ): BackHandlerSubscription;
 
     /**
      * Exit the application (mobile only, no-op on web)

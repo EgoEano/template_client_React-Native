@@ -1,17 +1,22 @@
-import React, {
+import {
     createContext,
     useContext,
     useState,
     useCallback,
     useMemo,
     useEffect,
-    useRef
-} from "react";
+    useRef,
+} from 'react';
 import { Dimensions } from 'react-native';
-import { templateTokens, createSemantics, createComponents } from "../../ui/styles/themes";
+import {
+    templateTokens,
+    createSemantics,
+    createComponents,
+} from '../../ui/styles/themes';
+import { logWarn } from '../utils/loggerService';
 
 import type { ReactNode } from 'react';
-import type { Theme, StyleTokens } from "../../types/themeTypes";
+import type { Theme, StyleTokens } from '../../types/themeTypes';
 
 //#region Types
 type DeepPartial<T> = {
@@ -27,25 +32,26 @@ interface StyleProviderContext {
     initTheme: (name: string) => void;
     addTheme: (name: string, partialTokens: DeepPartial<StyleTokens>) => void;
     selectTheme: (name: string) => void;
-    add: (name: string, styleVariants: any) => void;
-    addGroup: (group: Record<string, any>) => void;
+    add: (name: string, styleVariants: any) => boolean;
+    addGroup: (group: Record<string, any>) => boolean;
 }
 
-type ScreenCategory = "compact" | "spacious";
+type ScreenCategory = 'compact' | 'spacious';
 
 interface DimensionsArgs {
-    window: { width: number, height: number, scale: number, fontScale: number }
+    window: { width: number; height: number; scale: number; fontScale: number };
 }
 
 interface CustomDimensions {
-    width: number,
-    height: number,
-    visibleWidth: number,
-    visibleHeight: number,
+    width: number;
+    height: number;
+    visibleWidth: number;
+    visibleHeight: number;
 }
 //#endregion
 
-const getScreenCategory = (width?: number | null): ScreenCategory => (width ?? Dimensions.get('window').width) < 1000 ? "compact" : "spacious";
+const getScreenCategory = (width?: number | null): ScreenCategory =>
+    (width ?? Dimensions.get('window').width) < 1000 ? 'compact' : 'spacious';
 const getDimensions = (): CustomDimensions => {
     const wndw = Dimensions.get('window');
     const vv = (globalThis as any).visualViewport;
@@ -64,7 +70,9 @@ export const StyleProvider = ({ children }: { children: ReactNode }) => {
 
     const stylesRef = useRef<Record<string, any>>({});
     const themeRef = useRef<Theme | null>(null);
-    const themesContainerRef = useRef<Record<string, DeepPartial<StyleTokens>>>({});
+    const themesContainerRef = useRef<Record<string, DeepPartial<StyleTokens>>>(
+        {},
+    );
     const currentThemeRef = useRef<string | null>(null);
 
     const screenCategory = useRef<ScreenCategory>(getScreenCategory());
@@ -72,16 +80,20 @@ export const StyleProvider = ({ children }: { children: ReactNode }) => {
 
     const isThemeInitialized = useRef<boolean>(false);
 
-    const updateUI = () => setVersion(v => v + 1);
+    const updateUI = () => setVersion((v) => v + 1);
 
-    const add = useCallback((name: string, styleVariants: any) => {
+    const add = useCallback((name: string, styleVariants: any): boolean => {
         if (typeof name !== 'string' || name.trim().length === 0) {
-            console.error(`StyleServiceProvider. Style name must be a non-empty string.`);
-            return;
+            logWarn(
+                `StyleServiceProvider. Style name must be a non-empty string.`,
+            );
+            return false;
         }
         if (!styleVariants || typeof styleVariants !== 'object') {
-            console.error(`StyleServiceProvider. Invalid style object for '${name}'.`);
-            return;
+            logWarn(
+                `StyleServiceProvider. Invalid style object for '${name}'.`,
+            );
+            return false;
         }
 
         stylesRef.current[name] = {
@@ -89,28 +101,35 @@ export const StyleProvider = ({ children }: { children: ReactNode }) => {
             compact: styleVariants?.compact || {},
             spacious: styleVariants?.spacious || {},
         };
+        return true;
     }, []);
 
-
-    const addGroup = (group: Record<string, any>) => {
+    const addGroup = (group: Record<string, any>): boolean => {
         if (!group || typeof group !== 'object') {
-            console.warn('StyleProvider: Invalid group passed to addGroup.');
-            return;
+            logWarn('StyleProvider: Invalid group passed to addGroup.');
+            return false;
         }
 
         for (const [name, styleVariants] of Object.entries(group)) {
             add(name, styleVariants);
         }
         updateUI();
+        return true;
     };
 
     const styles = useMemo<Record<string, Record<string, any>>>(() => {
         const category = screenCategory.current;
         const result: Record<string, Record<string, any>> = {};
-        for (const [name, variants] of Object.entries(stylesRef.current as Record<
-            string,
-            { main?: Record<string, any>; compact?: Record<string, any>; spacious?: Record<string, any> }
-        >)) {
+        for (const [name, variants] of Object.entries(
+            stylesRef.current as Record<
+                string,
+                {
+                    main?: Record<string, any>;
+                    compact?: Record<string, any>;
+                    spacious?: Record<string, any>;
+                }
+            >,
+        )) {
             result[name] = {
                 ...(variants.main ?? {}),
                 ...(variants[category as keyof typeof variants] ?? {}),
@@ -119,13 +138,20 @@ export const StyleProvider = ({ children }: { children: ReactNode }) => {
         return result;
     }, [version]);
 
-    const addTheme = (name: string, partialTokens: DeepPartial<StyleTokens>) => {
+    const addTheme = (
+        name: string,
+        partialTokens: DeepPartial<StyleTokens>,
+    ) => {
         if (!name || typeof name !== 'string' || name.trim().length === 0) {
-            console.error(`StyleServiceProvider. Theme name must be a non-empty string.`);
+            logWarn(
+                `StyleServiceProvider. Theme name must be a non-empty string.`,
+            );
             return;
         }
         if (!partialTokens || typeof partialTokens !== 'object') {
-            console.error(`StyleServiceProvider. Invalid theme object for '${name}'.`);
+            logWarn(
+                `StyleServiceProvider. Invalid theme object for '${name}'.`,
+            );
             return;
         }
         themesContainerRef.current[name] = partialTokens;
@@ -145,12 +171,16 @@ export const StyleProvider = ({ children }: { children: ReactNode }) => {
     const initTheme = (name: string) => {
         if (isThemeInitialized.current) return;
         if (!name || typeof name !== 'string' || name.trim().length === 0) {
-            console.error(`StyleServiceProvider. Theme name must be a non-empty string.`);
+            logWarn(
+                `StyleServiceProvider. Theme name must be a non-empty string.`,
+            );
             return;
         }
         const isSelected = selectTheme(name);
         if (!isSelected) {
-            throw new Error(`StyleServiceProvider. Theme '${name}' is not found.`);
+            throw new Error(
+                `StyleServiceProvider. Theme '${name}' is not found.`,
+            );
         }
         isThemeInitialized.current = true;
         updateUI();
@@ -167,42 +197,46 @@ export const StyleProvider = ({ children }: { children: ReactNode }) => {
             updateUI();
         };
 
-        const subscription = Dimensions.addEventListener("change", handleResize);
+        const subscription = Dimensions.addEventListener(
+            'change',
+            handleResize,
+        );
         return () => subscription?.remove();
     }, []);
 
     useEffect(() => {
-        addTheme("default", templateTokens);
-        initTheme("default");
-    }, []);
+        addTheme('default', templateTokens);
+        initTheme('default');
+    }, [addTheme, initTheme]);
 
-    const value = useMemo<StyleProviderContext>(() => ({
-        styles,
-        get dimensions() {
-            return dimensionsRef.current;
-        },
-        get theme() {
-            return themeRef.current;
-        },
-        get currentTheme() {
-            return currentThemeRef.current;
-        },
-        get themesContainer() {
-            return themesContainerRef.current;
-        },
-        initTheme,
-        addTheme,
-        selectTheme,
-        add,
-        addGroup,
-    }), [version]);
+    const value = useMemo<StyleProviderContext>(
+        () => ({
+            styles,
+            get dimensions() {
+                return dimensionsRef.current;
+            },
+            get theme() {
+                return themeRef.current;
+            },
+            get currentTheme() {
+                return currentThemeRef.current;
+            },
+            get themesContainer() {
+                return themesContainerRef.current;
+            },
+            initTheme,
+            addTheme,
+            selectTheme,
+            add,
+            addGroup,
+        }),
+        [version, add, addGroup, initTheme, addTheme, selectTheme],
+    );
 
     return (
-        <StyleContext.Provider value={value}>
-            {children}
-        </StyleContext.Provider>
+        <StyleContext.Provider value={value}>{children}</StyleContext.Provider>
     );
-}
+};
 
 export const useStyleContext = (): StyleProviderContext => {
     const context = useContext(StyleContext);
@@ -212,49 +246,59 @@ export const useStyleContext = (): StyleProviderContext => {
     return context;
 };
 
-export const buildTheme = (partialTokens?: DeepPartial<StyleTokens> | null): Theme => {
+export const buildTheme = (
+    partialTokens?: DeepPartial<StyleTokens> | null,
+): Theme => {
     const mergedTokens: StyleTokens = {
-        colors: partialTokens?.colors ? {
-            ...templateTokens.colors,
-            ...(partialTokens?.colors || {})
-        } : templateTokens.colors,
-        sizes: partialTokens?.sizes ? {
-            spacing: {
-                ...templateTokens.sizes.spacing,
-                ...(partialTokens?.sizes.spacing || {})
-            },
-            radius: {
-                ...templateTokens.sizes.radius,
-                ...(partialTokens?.sizes.radius || {})
-            },
-            borderWidth: {
-                ...templateTokens.sizes.borderWidth,
-                ...(partialTokens?.sizes.borderWidth || {})
-            },
-            backdrop: {
-                ...templateTokens.sizes.backdrop,
-                ...(partialTokens?.sizes.backdrop || {})
-            }
-        } : templateTokens.sizes,
-        typography: partialTokens?.typography ? {
-            fontFamily: partialTokens?.typography.fontFamily ?? templateTokens.typography.fontFamily,
-            fontSize: {
-                ...templateTokens.typography.fontSize,
-                ...(partialTokens?.typography.fontSize || {})
-            },
-            fontWeight: {
-                ...templateTokens.typography.fontWeight,
-                ...(partialTokens?.typography.fontWeight || {})
-            },
-            lineHeight: {
-                ...templateTokens.typography.lineHeight,
-                ...(partialTokens?.typography.lineHeight || {})
-            }
-        } : templateTokens.typography,
+        colors: partialTokens?.colors
+            ? {
+                  ...templateTokens.colors,
+                  ...(partialTokens?.colors || {}),
+              }
+            : templateTokens.colors,
+        sizes: partialTokens?.sizes
+            ? {
+                  spacing: {
+                      ...templateTokens.sizes.spacing,
+                      ...(partialTokens?.sizes.spacing || {}),
+                  },
+                  radius: {
+                      ...templateTokens.sizes.radius,
+                      ...(partialTokens?.sizes.radius || {}),
+                  },
+                  borderWidth: {
+                      ...templateTokens.sizes.borderWidth,
+                      ...(partialTokens?.sizes.borderWidth || {}),
+                  },
+                  backdrop: {
+                      ...templateTokens.sizes.backdrop,
+                      ...(partialTokens?.sizes.backdrop || {}),
+                  },
+              }
+            : templateTokens.sizes,
+        typography: partialTokens?.typography
+            ? {
+                  fontFamily:
+                      partialTokens?.typography.fontFamily ??
+                      templateTokens.typography.fontFamily,
+                  fontSize: {
+                      ...templateTokens.typography.fontSize,
+                      ...(partialTokens?.typography.fontSize || {}),
+                  },
+                  fontWeight: {
+                      ...templateTokens.typography.fontWeight,
+                      ...(partialTokens?.typography.fontWeight || {}),
+                  },
+                  lineHeight: {
+                      ...templateTokens.typography.lineHeight,
+                      ...(partialTokens?.typography.lineHeight || {}),
+                  },
+              }
+            : templateTokens.typography,
         elevation: {
             ...templateTokens.elevation,
-            ...(partialTokens?.elevation || {})
-        }
+            ...(partialTokens?.elevation || {}),
+        },
     };
 
     const semantics = createSemantics(mergedTokens);
@@ -263,6 +307,6 @@ export const buildTheme = (partialTokens?: DeepPartial<StyleTokens> | null): The
     return {
         tokens: mergedTokens,
         semantics,
-        components
+        components,
     };
 };

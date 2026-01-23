@@ -13,14 +13,17 @@ const mainRoutes: RouteNode = {
     children: [
         {
             path: '',
+            name: 'Main',
             component: FirstScreen,
         },
         {
             path: 'First',
+            name: 'First',
             component: FirstScreen,
         },
         {
             path: 'Second',
+            name: 'Second',
             component: SecondScreen,
         },
     ],

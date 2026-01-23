@@ -1,10 +1,9 @@
-import React, { useEffect, useState, useCallback } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import {
     Platform,
     KeyboardAvoidingView,
-    Dimensions,
     StatusBar,
     StyleSheet,
     useColorScheme,
@@ -40,47 +39,40 @@ export default function App() {
     );
 }
 
-function AppInit({ }) {
+function AppInit() {
     const { setSysValue, setSysValues } = useSystemData();
     const { setLanguagePack } = useLanguage();
-    const { styles, dimensions, addGroup } = useStyleContext();
+    const { addGroup } = useStyleContext();
 
     const [ready, setReady] = useState(false);
-
-    const init = async () => {
-        try {
-            addGroup(StyleSheet.create(gstyles));
-            setLanguagePack(languages['en-US']);
-            setSysValues(initSysValues());
-            setSysValue('config', config);
-            setReady(true);
-        } catch (e) {
-            console.error('Ошибка инициализации', e);
-        }
-    };
+    const initializedRef = useRef(false);
 
     useEffect(() => {
-        init();
-    }, []);
+        if (initializedRef.current) return;
+        initializedRef.current = true;
 
-    console.log('[AppInit] render, ready=', ready);
-    return (ready) ? <RootView /> : <AppLoadingPlaceholder />
+        addGroup(StyleSheet.create(gstyles));
+        setLanguagePack(languages['en-US']);
+        setSysValues(initSysValues());
+        setSysValue('config', config);
+        setReady(true);
+    }, [addGroup, setLanguagePack, setSysValues, setSysValue]);
+
+    return ready ? <RootView /> : <AppLoadingPlaceholder />;
 }
 
-function RootView({ }) {
+function RootView() {
     const isDarkMode = useColorScheme() === 'dark';
     const { styles } = useStyleContext();
     const { getSysValue } = useSystemData();
 
     useEffect(() => {
-        const isHidden = getSysValue('isStatusBarHidden') ?? false;
+        const isHidden = Boolean(getSysValue('isStatusBarHidden'));
         StatusBar.setHidden(isHidden, 'slide');
-    }, []);
+    }, [getSysValue]);
 
     return (
-        <View
-            style={styles.flexContainer}
-        >
+        <View style={styles.flexContainer}>
             <StatusBar
                 barStyle={isDarkMode ? 'light-content' : 'dark-content'}
                 backgroundColor={styles.statusBar?.color ?? 'red'}
@@ -94,8 +86,17 @@ function RootView({ }) {
 
 function AppLoadingPlaceholder() {
     return (
-        <View style={{ flex: 1, justifyContent: "center", alignItems: "center", backgroundColor: "#fff" }}>
-            <Text style={{ fontSize: 18, color: "#999" }}>{'Loading... (set your app logo)'}</Text>
+        <View
+            style={{
+                flex: 1,
+                justifyContent: 'center',
+                alignItems: 'center',
+                backgroundColor: '#fff',
+            }}
+        >
+            <Text style={{ fontSize: 18, color: '#999' }}>
+                {'Loading... (set your app logo)'}
+            </Text>
         </View>
     );
 }
@@ -157,10 +158,9 @@ function initSysValues() {
                     backgroundColor: '#fff',
                 },
             },
-            drawer: {
-            },
+            drawer: {},
         },
         defaultRootNavigatorType: 'stack',
         defaultNavigatorType: 'tabs',
-    }
+    };
 }

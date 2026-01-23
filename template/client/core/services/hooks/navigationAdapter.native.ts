@@ -1,4 +1,7 @@
-import { useNavigation as useReactNavigation, useRoute as useReactRoute } from '@react-navigation/native';
+import {
+    useNavigation as useReactNavigation,
+    useRoute as useReactRoute,
+} from '@react-navigation/native';
 
 export const useNavigation = () => {
     const navigation = useReactNavigation<any>();

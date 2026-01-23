@@ -1,4 +1,4 @@
-import React, { createContext, useCallback, useContext, useEffect, useMemo, useReducer, useRef, useState } from 'react';
+import React, { useState } from 'react';
 import {
     Pressable as RNPressable,
     Text as RNText,
@@ -6,7 +6,6 @@ import {
     View as RNView,
     ScrollView as RNScrollView,
     TextInput as RNTextInput,
-    Keyboard,
     Platform,
 } from 'react-native';
 
@@ -16,11 +15,10 @@ import type {
     TextStyle,
     GestureResponderEvent,
     StyleProp,
-    TextProps as RNTextProps
+    TextProps as RNTextProps,
 } from 'react-native';
 
-import { useStyleContext } from "../../services/providers/styleProvider";
-
+import { useStyleContext } from '../../services/providers/styleProvider';
 
 //#region Atoms
 //#region Button
@@ -41,11 +39,32 @@ type Props_Button = {
         radius?: number;
         foreground?: boolean;
     };
-    variant?: 'primary' | 'secondary' | "success" | "error" | "disabled";
+    variant?: 'primary' | 'secondary' | 'success' | 'error' | 'disabled';
     style?: Props_ButtonStyleGroup;
     textStyle?: StyleProp<TextStyle>;
     children?: React.ReactNode;
 };
+const style_inner_Button = StyleSheet.create({
+    button: {
+        backgroundColor: '#1e90ff',
+        paddingVertical: 12,
+        paddingHorizontal: 20,
+        borderRadius: 10,
+        alignItems: 'center',
+        justifyContent: 'center',
+    },
+    pressed: {
+        opacity: 0.6,
+        transform: [{ scale: 0.97 }],
+    },
+    disabled: {
+        opacity: 0.4,
+    },
+    text: {
+        color: 'white',
+        fontSize: 16,
+    },
+});
 export function Button({
     title,
     onPress,
@@ -58,28 +77,6 @@ export function Button({
 }: Props_Button) {
     const { theme } = useStyleContext();
 
-    const style_inner = useMemo(() => StyleSheet.create({
-        button: {
-            backgroundColor: '#1e90ff',
-            paddingVertical: 12,
-            paddingHorizontal: 20,
-            borderRadius: 10,
-            alignItems: 'center',
-            justifyContent: 'center',
-        },
-        pressed: {
-            opacity: 0.6,
-            transform: [{ scale: 0.97 }],
-        },
-        disabled: {
-            opacity: 0.4,
-        },
-        text: {
-            color: 'white',
-            fontSize: 16,
-        },
-    }), []);
-
     return (
         <RNPressable
             onPress={onPress}
@@ -87,11 +84,11 @@ export function Button({
             disabled={disabled}
             android_ripple={android_ripple}
             style={({ pressed }) => [
-                style_inner.button,
-                pressed && style_inner.pressed,
-                disabled && style_inner.disabled,
+                style_inner_Button.button,
+                pressed && style_inner_Button.pressed,
+                disabled && style_inner_Button.disabled,
 
-                theme?.components.button[variant]?.container,
+                theme?.components.button[variant]?.container ?? {},
                 disabled && theme?.components.button.disabled.container,
 
                 style?.button,
@@ -99,11 +96,17 @@ export function Button({
                 disabled && style?.disabled,
             ]}
         >
-            {children ?? <RNText style={[
-                style_inner.text,
-                theme?.components.button[variant]?.text,
-                style?.text
-            ]}>{title ?? ''}</RNText>}
+            {children ?? (
+                <RNText
+                    style={[
+                        style_inner_Button.text,
+                        theme?.components.button[variant]?.text ?? {},
+                        style?.text,
+                    ]}
+                >
+                    {title ?? ''}
+                </RNText>
+            )}
         </RNPressable>
     );
 }
@@ -111,35 +114,33 @@ export function Button({
 //#endregion
 
 //#region Text
-type TextStyleGroup = {
-    title?: StyleProp<TextStyle>;
-    body?: StyleProp<TextStyle>;
-    label?: StyleProp<TextStyle>;
-};
-
+// type TextStyleGroup = {
+//     title?: StyleProp<TextStyle>;
+//     body?: StyleProp<TextStyle>;
+//     label?: StyleProp<TextStyle>;
+// };
 type TextProps = RNTextProps & {
-    variant?: "title" | "subtitle" | "body" | "label";
-    colorVariant?: "primary" | "secondary";
+    variant?: 'title' | 'subtitle' | 'body' | 'label';
+    colorVariant?: 'primary' | 'secondary';
     style?: StyleProp<TextStyle>;
-    [key: string]: any;
 };
 
 export function Text({
-    variant = "body", colorVariant = "primary", style, children, ...props
+    variant = 'body',
+    colorVariant = 'primary',
+    style,
+    children,
+    ...props
 }: TextProps) {
     const { theme } = useStyleContext();
 
-    const textStyle = useMemo(() => {
-        const t = theme?.components?.text;
-        const color = theme?.semantics.colors.text[colorVariant] ?? theme?.semantics.colors.text.primary
-        if (!t) return style;
-        const baseStyle = t?.[variant] ?? {};
-
-        return [baseStyle, { color }, style];
-    }, [theme, variant, style, colorVariant]);
+    const baseStyle = theme?.components?.text?.[variant] ?? {};
+    const color =
+        theme?.semantics.colors.text[colorVariant] ??
+        theme?.semantics.colors.text.primary;
 
     return (
-        <RNText style={textStyle} {...props}>
+        <RNText style={[baseStyle, color && { color }, style]} {...props}>
             {children}
         </RNText>
     );
@@ -148,10 +149,11 @@ export function Text({
 //#endregion
 
 //#region InputText:string
-{/* <InputText value={"value"} onChange={onChange} style={style}/> */ }
+{
+    /* <InputText value={"value"} onChange={onChange} style={style}/> */
+}
 type Props_InputTextGroup = {
-    container?: StyleProp<ViewStyle>;
-    text?: StyleProp<TextStyle>;
+    container?: StyleProp<TextStyle>;
     placeholder?: StyleProp<TextStyle>;
     focused?: StyleProp<ViewStyle>;
     error?: StyleProp<ViewStyle>;
@@ -165,11 +167,22 @@ type InputTextProps = {
     onFocus?: () => void;
     onBlur?: () => void;
     error?: boolean;
-    variant?: "primary" | "secondary" | "success" | "error" | "disabled" | "inverse";
+    variant?:
+        | 'primary'
+        | 'secondary'
+        | 'success'
+        | 'error'
+        | 'disabled'
+        | 'inverse';
     style?: Props_InputTextGroup;
-    [key: string]: any;
 };
-
+const style_inner_InputText = StyleSheet.create({
+    container: {
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+    },
+});
 export function InputText({
     value,
     name,
@@ -179,11 +192,10 @@ export function InputText({
     onBlur,
     error = false,
     style = {},
-    variant = "primary",
+    variant = 'primary',
     ...props
 }: InputTextProps) {
     const { theme } = useStyleContext();
-
     const [focused, setFocused] = useState(false);
 
     const handleChange = (val: string) => {
@@ -191,7 +203,6 @@ export function InputText({
     };
 
     const handleBlur = () => {
-        //Keyboard.dismiss();
         setFocused(false);
         onBlur?.();
     };
@@ -201,37 +212,10 @@ export function InputText({
         onFocus?.();
     };
 
-    const style_inner = useMemo(() => {
-        const base = theme?.components.input;
-        const color = theme?.semantics.colors.text[variant] ?? theme?.semantics.colors.text.primary
-
-        return StyleSheet.create({
-            container: {
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                ...(base?.container ?? {}),
-                ...(base?.text ?? {}),
-                color,
-                ...(style?.container ?? {}),
-                ...(style?.text ?? {}),
-                ...(focused ? base?.focusedBorder : {}),
-                ...(focused ? style?.focused : {}),
-                ...(error ? base?.errorBorder : {}),
-                ...(error ? style?.error : {}),
-            },
-            text: {
-                ...(base?.text ?? {}),
-                color,
-                ...(style?.text ?? {}),
-            },
-            placeholder: {
-                ...(base?.placeholder ?? {}),
-                color,
-                ...(style?.placeholder ?? {}),
-            }
-        });
-    }, [theme, focused, error, style, variant]);
+    const base = theme?.components.input;
+    const color =
+        theme?.semantics.colors.text[variant] ??
+        theme?.semantics.colors.text.primary;
 
     return (
         <RNTextInput
@@ -239,9 +223,21 @@ export function InputText({
             onChangeText={handleChange}
             onFocus={handleFocus}
             onBlur={handleBlur}
-            style={style_inner.container}
             placeholder={placeholder}
-            placeholderTextColor={style_inner.placeholder.color}
+            placeholderTextColor={base?.placeholder.color}
+            style={[
+                style_inner_InputText.container,
+                base?.container,
+
+                focused && base?.focusedBorder,
+                error && base?.errorBorder,
+
+                { color },
+
+                style?.container,
+                focused && style?.focused,
+                error && style?.error,
+            ]}
             {...props}
         />
     );
@@ -252,7 +248,8 @@ export function InputText({
 
 //#region Moleculas
 //#region Modal
-{/* 
+{
+    /* 
     <Modal
         isShow={isShow} 
         setIsShow={setIsShow}
@@ -260,14 +257,34 @@ export function InputText({
     >
         content
     </Modal> 
-*/}
+*/
+}
 type ModalProps = {
-    isShow: boolean,
-    setIsShow: Dispatch<SetStateAction<boolean>>,
-    closable?: boolean,
-    style?: StyleProp<ViewStyle>,
+    isShow: boolean;
+    setIsShow: Dispatch<SetStateAction<boolean>>;
+    closable?: boolean;
+    style?: StyleProp<ViewStyle>;
     children: React.ReactNode;
 };
+const style_inner_Modal = StyleSheet.create({
+    main: {
+        position: 'absolute',
+        top: 0,
+        left: 0,
+        right: 0,
+        bottom: 0,
+        width: '100%',
+        height: '100%',
+        alignItems: 'center',
+        justifyContent: 'center',
+        backgroundColor: '#000000cf',
+        zIndex: 1000,
+    },
+    content: {
+        minHeight: 0,
+        maxHeight: '100%',
+    },
+});
 export function Modal({
     isShow,
     setIsShow,
@@ -277,31 +294,8 @@ export function Modal({
 }: ModalProps) {
     const { theme } = useStyleContext();
 
-    const style_inner = useMemo(() => StyleSheet.create({
-        main: {
-            position: Platform.OS === 'web' ? 'fixed' : 'absolute',
-            top: 0,
-            left: 0,
-            right: 0,
-            bottom: 0,
-            width: '100%',
-            height: '100%',
-            alignItems: 'center',
-            justifyContent: 'center',
-            backgroundColor: '#000000cf',
-            backdropFilter: `blur(${theme?.semantics.colors.overlays.blur ?? 0}px)`,
-            zIndex: 1000,
-            ...(theme?.components.modal?.overlay ?? {}),
-            ...(style ?? {})
-        },
-        content: {
-            minHeight: 0,
-            maxHeight: '100%',
-        }
-    }), [style, theme]);
-
     const toggleShow = () => {
-        if (closable) setIsShow?.(s => !s);
+        if (closable) setIsShow?.((s) => !s);
     };
 
     if (!isShow) return null;
@@ -309,12 +303,13 @@ export function Modal({
     return (
         <RNPressable
             onPress={toggleShow}
-            style={style_inner.main}
+            style={[
+                style_inner_Modal.main,
+                theme?.components.modal?.overlay,
+                style,
+            ]}
         >
-            <RNPressable
-                style={[style_inner.content]}
-                onPress={() => { }}
-            >
+            <RNPressable style={[style_inner_Modal.content]} onPress={() => {}}>
                 {children}
             </RNPressable>
         </RNPressable>
@@ -323,22 +318,24 @@ export function Modal({
 //#endregion
 
 //#region ModalCard
-{/* 
+{
+    /* 
     <ModalCard 
         isShow={isShow} 
         setIsShow={setIsShow}
     >
         children
     </ModalCard> 
-*/}
+*/
+}
 type ModalCardProps = {
-    isShow: boolean,
-    setIsShow: Dispatch<SetStateAction<boolean>>,
-    isHasCross?: boolean,
-    isScrollable?: boolean,
-    closable?: boolean,
-    children: React.ReactNode,
-    style?: ModalCard_StyleGroupProps,
+    isShow: boolean;
+    setIsShow: Dispatch<SetStateAction<boolean>>;
+    isHasCross?: boolean;
+    isScrollable?: boolean;
+    closable?: boolean;
+    children: React.ReactNode;
+    style?: ModalCard_StyleGroupProps;
 };
 type ModalCard_StyleGroupProps = {
     modal?: ViewStyle;
@@ -346,6 +343,44 @@ type ModalCard_StyleGroupProps = {
     card?: ViewStyle;
     content?: ViewStyle;
 };
+const style_inner_ModalCard = StyleSheet.create({
+    wrapper: {
+        position: 'relative',
+        maxWidth: '100%',
+        maxHeight: '100%',
+        flex: Platform.OS === 'web' ? 1 : 0,
+        alignItems: 'center',
+        justifyContent: 'center',
+    },
+    closeButton: {
+        position: 'absolute',
+        top: -32,
+        right: 10,
+        backgroundColor: 'transparent',
+        borderColor: '#00000000',
+        width: 32,
+        height: 32,
+        alignItems: 'center',
+        justifyContent: 'center',
+    },
+    closeButtonText: {
+        color: '#fff',
+        fontWeight: 'bold',
+        fontSize: 24,
+        lineHeight: 20,
+    },
+    card: {
+        position: 'relative',
+        width: '100%',
+        backgroundColor: '#fff',
+        borderRadius: 12,
+        elevation: 4,
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.2,
+        shadowRadius: 4,
+    },
+});
 export function ModalCard({
     isShow,
     setIsShow,
@@ -357,65 +392,23 @@ export function ModalCard({
 }: ModalCardProps) {
     const { theme } = useStyleContext();
 
-    const style_inner = useMemo(() => StyleSheet.create({
-        modal: style?.modal ?? {},
-        wrapper: {
-            position: 'relative',
-            maxWidth: '100%',
-            maxHeight: '100%',
-            flex: Platform.OS === 'web' ? 1 : 0,
-            alignItems: 'center',
-            justifyContent: 'center',
-            ...(style?.wrapper ?? {}),
-        },
-        closeButton: {
-            position: 'absolute',
-            top: -32,
-            right: 10,
-            backgroundColor: 'transparent',
-            borderColor: '#00000000',
-            width: 32,
-            height: 32,
-            alignItems: 'center',
-            justifyContent: 'center',
-        },
-        closeButtonText: {
-            color: '#fff',
-            fontWeight: 'bold',
-            fontSize: 24,
-            lineHeight: 20,
-        },
-        card: {
-            position: 'relative',
-            width: '100%',
-            backgroundColor: '#fff',
-            borderRadius: 12,
-            elevation: 4,
-            shadowColor: '#000',
-            shadowOffset: { width: 0, height: 2 },
-            shadowOpacity: 0.2,
-            shadowRadius: 4,
-            ...(theme?.components.card.container ?? {}),
-            ...(style?.card ?? {}),
-        },
-        content: style?.content ?? {}
-    }), [style, theme]);
-
     return (
         <Modal
             isShow={isShow}
             setIsShow={setIsShow}
             closable={closable}
-            style={style_inner.modal}
+            style={[style?.modal]}
         >
-            <View style={style_inner.wrapper} >
+            <View style={[style_inner_ModalCard.wrapper, style?.wrapper]}>
                 {isHasCross && (
                     <RNPressable
-                        style={style_inner.closeButton}
+                        style={style_inner_ModalCard.closeButton}
                         onPress={() => setIsShow(false)}
                         hitSlop={10}
                     >
-                        <RNText style={style_inner.closeButtonText}>⛌</RNText>
+                        <RNText style={style_inner_ModalCard.closeButtonText}>
+                            ⛌
+                        </RNText>
                     </RNPressable>
                 )}
                 <Card
@@ -423,8 +416,12 @@ export function ModalCard({
                     isAllowHorizontalScroll={false}
                     showsVerticalScrollIndicator={false}
                     style={{
-                        card: style_inner.card,
-                        content: style_inner.content,
+                        card: [
+                            style_inner_ModalCard.card,
+                            theme?.components.card.container,
+                            style?.card,
+                        ],
+                        content: style?.content ?? {},
                     }}
                 >
                     {children}
@@ -435,23 +432,36 @@ export function ModalCard({
 }
 //#endregion
 
-//#region View 
-{/* 
+//#region View
+{
+    /* 
     <View
         isScrollable={isScrollable}
         isAllowHorizontalScroll={isAllowHorizontalScroll}
         showsVerticalScrollIndicator={showsVerticalScrollIndicator}
         style={style}
     ></View> 
-*/}
-type ViewProps = React.ComponentProps<any> & {
+*/
+}
+type ViewProps = React.ComponentProps<typeof RNView> & {
     isScrollable?: boolean;
     isAllowHorizontalScroll?: boolean;
     showsVerticalScrollIndicator?: boolean;
     style?: StyleProp<ViewStyle>;
     children: React.ReactNode;
-    [key: string]: any;
 };
+const style_inner_View = StyleSheet.create({
+    container: {
+        width: '100%',
+        display: 'flex',
+    },
+    main: {
+        display: 'flex',
+        flexDirection: 'column',
+        justifyContent: 'flex-start',
+        alignItems: 'center',
+    },
+});
 export function View({
     isScrollable = false,
     isAllowHorizontalScroll = false,
@@ -460,39 +470,23 @@ export function View({
     children,
     ...props
 }: ViewProps) {
-    const { theme } = useStyleContext();
-
-    const style_inner = useMemo(() => StyleSheet.create({
-        container: {
-            width: '100%',
-            display: "flex",
-        },
-        main: {
-            display: "flex",
-            flexDirection: "column",
-            justifyContent: "flex-start",
-            alignItems: "center",
-            ...style
-        },
-    }), [style, theme]);
-
-    return (
-        isScrollable ?
-            <RNScrollView
-                style={style_inner.container}
-                contentContainerStyle={style_inner.main}
-                showsVerticalScrollIndicator={showsVerticalScrollIndicator}
-                bounces={true}
-                horizontal={isAllowHorizontalScroll}
-                {...props}
-            >
-                {children}
-            </RNScrollView> :
-            <RNView style={style_inner.main} {...props}>
-                {children}
-            </RNView>
+    return isScrollable ? (
+        <RNScrollView
+            style={[style_inner_View.container]}
+            contentContainerStyle={[style_inner_View.main, style]}
+            showsVerticalScrollIndicator={showsVerticalScrollIndicator}
+            bounces={true}
+            horizontal={isAllowHorizontalScroll}
+            {...props}
+        >
+            {children}
+        </RNScrollView>
+    ) : (
+        <RNView style={[style_inner_View.main, style]} {...props}>
+            {children}
+        </RNView>
     );
-};
+}
 //#endregion
 
 //#region Card
@@ -506,8 +500,23 @@ type CardProps = {
     showsVerticalScrollIndicator?: boolean;
     style?: Card_StyleGroupProps;
     children: React.ReactNode;
-    [key: string]: any;
 };
+const style_inner_Card = StyleSheet.create({
+    card: {
+        position: 'relative',
+        width: '100%',
+        backgroundColor: '#fff',
+        borderRadius: 12,
+        elevation: 4,
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.2,
+        shadowRadius: 4,
+    },
+    content: {
+        width: '100%',
+    },
+});
 export function Card({
     isScrollable = false,
     isAllowHorizontalScroll = false,
@@ -518,248 +527,28 @@ export function Card({
 }: CardProps) {
     const { theme } = useStyleContext();
 
-    const cardTheme = theme?.components.card
-
-    const styleInner = useMemo(() => StyleSheet.create({
-        card: {
-            position: 'relative',
-            width: '100%',
-            backgroundColor: '#fff',
-            borderRadius: 12,
-            elevation: 4,
-            shadowColor: '#000',
-            shadowOffset: { width: 0, height: 2 },
-            shadowOpacity: 0.2,
-            shadowRadius: 4,
-            ...(cardTheme?.container ?? {}),
-            ...(style?.card ?? {})
-        },
-        content: {
-            width: '100%',
-            //flex: 1,
-            ...(cardTheme?.content ?? {}),
-            ...(style?.content ?? {})
-        }
-    }), [style, theme]);
+    const cardTheme = theme?.components.card;
 
     return (
         <View
             isScrollable={isScrollable}
             isAllowHorizontalScroll={isAllowHorizontalScroll}
             showsVerticalScrollIndicator={showsVerticalScrollIndicator}
-            style={styleInner.card}
+            style={[style_inner_Card.card, cardTheme?.container, style?.card]}
+            {...props}
         >
-            <View style={styleInner.content}>
+            <View
+                style={[
+                    style_inner_Card.content,
+                    cardTheme?.content,
+                    style?.content,
+                ]}
+            >
                 {children}
             </View>
         </View>
     );
 }
 //#endregion
-
-
-
-//#region FormContent
-type FormContentContextType = {
-    values: Record<string, any>;
-    errors: Record<string, boolean>;
-    handleChange: (value: any, key: string) => void;
-    handleSubmit: (options?: any) => void;
-    handleCancel: (options?: any) => void;
-};
-
-interface FormContentProps {
-    formData?: Record<string, any>;
-    formDataRules?: Record<string, ((value: any, data: Record<string, any>) => boolean) | undefined>;
-    onSubmit?: (params: { data: Record<string, any>; options?: any; validation: { success: boolean; errors: string[] } }) => void;
-    onCancel?: (params: { data: Record<string, any>; options?: any; validation: { success: boolean; errors: string[] } }) => void;
-    onChange?: (params: { values: Record<string, any>; lastChangedKey: string | null }) => any;
-    isResetOnAction?: boolean;
-    children?: React.ReactNode | ((args: {
-        values: Record<string, any>;
-        errors: Record<string, boolean>;
-        handleChange: (v: any, k: string) => void;
-        handleSubmit: (options?: any) => void;
-        handleCancel: (options?: any) => void;
-    }) => React.ReactNode);
-    style?: React.CSSProperties;
-    [key: string]: any;
-};
-
-type FormContentAction = {
-    type: 'update_field';
-    key: string;
-    value: any;
-} | {
-    type: 'set_values';
-    values: Record<string, any>;
-} | {
-    type: 'reset';
-    initial: Record<string, any>;
-} | {
-    type: 'update_errors';
-    errors: Record<string, boolean>;
-};
-
-const style_FormContent = StyleSheet.create({
-    main: {
-        width: '100%',
-        display: "flex",
-        flexDirection: "column",
-        gap: 10,
-    }
-});
-const formReducer = (
-    state: Record<string, any>,
-    action: FormContentAction
-) => {
-    switch (action.type) {
-        case 'update_field':
-            return { ...state, [action.key]: action.value };
-        case 'set_values':
-            return { ...action.values };
-        case 'reset':
-            return {};
-        default:
-            return state;
-    }
-};
-
-const errorsReducer = (
-    state: Record<string, boolean>,
-    action: FormContentAction
-) => {
-    switch (action.type) {
-        case 'update_errors':
-            return { ...action.errors };
-        case 'reset':
-            return {};
-        default:
-            return state;
-    }
-};
-
-const FormContentContext = createContext<FormContentContextType | null>(null);
-export const useFormContext = () => useContext(FormContentContext);
-
-export function FormContent({
-    formData = {},
-    formDataRules = {},
-    onSubmit,
-    onCancel,
-    onChange,
-    isResetOnAction = true,
-    children,
-    style = {},
-    ...props
-}: FormContentProps) {
-    const initial = useRef<Record<string, any>>(formData);
-    const [values, dispatch] = useReducer(formReducer, formData);
-    const [errors, dispatchErrors] = useReducer(errorsReducer, {});
-    const lastChangedKey = useRef<string | null>(null);
-
-    const handleChange = (value: any, key: string) => {
-        if (!key) return;
-        lastChangedKey.current = key;
-        dispatch({ type: 'update_field', key, value });
-
-        const rule = formDataRules[key];
-        const isValid = !rule || typeof rule !== 'function' || rule(value, { ...values, [key]: value });
-        const isDifferentFromInitial = initial.current[key] !== value;
-
-        const newErrors = { ...errors };
-        if (!isValid && isDifferentFromInitial) {
-            newErrors[key] = true;
-        } else {
-            delete newErrors[key];
-        }
-
-        dispatchErrors({ type: 'update_errors', errors: newErrors });
-    };
-
-    const validateData = (data: any, rules: any) => {
-        const errorsList: string[] = [];
-        const errorsObj: Record<string, boolean> = {};
-
-        Object.entries(rules).forEach(([k, rule]) => {
-            const v = data[k];
-
-            if (
-                rule &&
-                typeof rule === 'function' &&
-                !rule(v, data)
-            ) {
-                errorsList.push(k);
-                errorsObj[k] = true;
-            }
-        });
-        dispatchErrors({ type: 'update_errors', errors: errorsObj });
-
-        return {
-            success: errorsList.length === 0,
-            errors: errorsList,
-        }
-    };
-
-    const handleSubmit = (options: any) => {
-        const validation = validateData(values, formDataRules);
-        onSubmit?.({
-            data: values,
-            options,
-            validation,
-        });
-        if (validation.success && isResetOnAction) handleReset();
-    };
-
-    const handleCancel = (options: any) => {
-        const validation = validateData(values, formDataRules);
-        onCancel?.({
-            data: values,
-            options,
-            validation,
-        });
-        if (isResetOnAction) handleReset();
-    };
-
-    const handleReset = () => {
-        dispatch({ type: "reset", initial: initial.current });
-        dispatchErrors({ type: "reset", initial: {} });
-    };
-
-    const shallowEqual = useCallback((a: any, b: any) => {
-        const keysA = Object.keys(a);
-        const keysB = Object.keys(b);
-        if (keysA.length !== keysB.length) return false;
-        for (let key of keysA) {
-            if (a[key] !== b[key]) return false;
-        }
-        return true;
-    }, []);
-
-    useEffect(() => {
-        if (!onChange) return;
-
-        const updated = onChange?.({ values, lastChangedKey: lastChangedKey.current });
-        if (!updated) return;
-
-        if (!shallowEqual(updated, values)) {
-            dispatch({ type: 'set_values', values: updated.data ?? updated });
-        }
-    }, [values]);
-
-    return (
-        <FormContentContext.Provider value={{ values, errors, handleChange, handleSubmit, handleCancel }}>
-            <View
-                style={{ ...style_FormContent.main, ...style }}
-                {...props}
-            >
-                {typeof children === "function" ? children({ values, errors, handleChange, handleSubmit, handleCancel }) : children}
-            </View>
-        </FormContentContext.Provider>
-    );
-}
-
-//#endregion
-
 
 //#endregion

@@ -1,23 +1,23 @@
-export type OperationResult = {
+export type OperationResult<T = unknown> = {
     success: boolean;
-    data?: any | null;
+    data?: T | null;
     message?: string | null;
-    code?: number | null, 
+    code?: number | null;
     errors?: string[] | null;
 };
 
-export function createOperationResult({
-    success, 
-    data = null, 
-    message = null, 
-    code = null, 
-    errors = null
-}: OperationResult) {
-    return { 
-        success, 
-        data, 
-        message, 
+export function createOperationResult<T = unknown>({
+    success,
+    data = null,
+    message = null,
+    code = null,
+    errors = null,
+}: OperationResult<T>) {
+    return {
+        success,
+        data,
+        message,
         code,
-        errors: Array.isArray(errors) ? errors : (errors ? [errors] : []),
+        errors: Array.isArray(errors) ? errors : errors ? [errors] : [],
     };
 }
