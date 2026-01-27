@@ -133,7 +133,7 @@ export function Grid<T>({
 }
 //#endregion
 
-//#region Form
+//#region Form //deprecated realization replaced with Formik
 type FormContextType = {
     values: Record<string, unknown>;
     errors: Record<string, boolean>;
@@ -161,37 +161,37 @@ interface FormProps {
     }) => unknown;
     isResetOnAction?: boolean;
     children?:
-        | React.ReactNode
-        | ((args: {
-              values: Record<string, unknown>;
-              errors: Record<string, boolean>;
-              handleChange: (v: unknown, k: string) => void;
-              handleSubmit: (options?: unknown) => void;
-              handleCancel: (options?: unknown) => void;
-          }) => React.ReactNode);
+    | React.ReactNode
+    | ((args: {
+        values: Record<string, unknown>;
+        errors: Record<string, boolean>;
+        handleChange: (v: unknown, k: string) => void;
+        handleSubmit: (options?: unknown) => void;
+        handleCancel: (options?: unknown) => void;
+    }) => React.ReactNode);
 }
 
 type FormAction =
     | {
-          type: 'update';
-          key: string;
-          value: unknown;
-      }
+        type: 'update';
+        key: string;
+        value: unknown;
+    }
     | {
-          type: 'set';
-          values: Record<string, unknown>;
-      };
+        type: 'set';
+        values: Record<string, unknown>;
+    };
 
 type FormErrorAction =
     | {
-          type: 'update';
-          key: string;
-          error: boolean;
-      }
+        type: 'update';
+        key: string;
+        error: boolean;
+    }
     | {
-          type: 'set';
-          errors: Record<string, boolean>;
-      };
+        type: 'set';
+        errors: Record<string, boolean>;
+    };
 
 const formReducer = (state: Record<string, unknown>, action: FormAction) => {
     switch (action.type) {
@@ -222,10 +222,10 @@ const errorsReducer = (
     }
 };
 
-const FormContentContext = createContext<FormContextType | null>(null);
-export const useFormContext = () => useContext(FormContentContext);
+const FormContext = createContext<FormContextType | null>(null);
+export const useFormContext = () => useContext(FormContext);
 
-export function FormContent({
+export function Form({
     data = {},
     dataRules = {},
     onSubmit,
@@ -305,19 +305,19 @@ export function FormContent({
     };
 
     return (
-        <FormContentContext.Provider
+        <FormContext.Provider
             value={{ values, errors, handleChange, handleSubmit, handleCancel }}
         >
             {typeof children === 'function'
                 ? children({
-                      values,
-                      errors,
-                      handleChange,
-                      handleSubmit,
-                      handleCancel,
-                  })
+                    values,
+                    errors,
+                    handleChange,
+                    handleSubmit,
+                    handleCancel,
+                })
                 : children}
-        </FormContentContext.Provider>
+        </FormContext.Provider>
     );
 }
 

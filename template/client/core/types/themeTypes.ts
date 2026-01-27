@@ -2,27 +2,24 @@ import type { ViewStyle, TextStyle } from 'react-native';
 
 //#region Tokens
 export type ColorTokens = {
-    // base colors
+    background: string;
+    surface: string;
+
     primary: string;
     primaryVariant: string;
     secondary: string;
     secondaryVariant: string;
 
+    onSurface: string;
+    onPrimary: string;
+    onSecondary: string;
+    onDisabled: string;
+
+    disabled: string;
     success: string;
     warning: string;
     error: string;
-
-    background: string;
-    surface: string;
-    disabled: string;
     backdrop: string;
-
-    // text
-    onPrimary: string;
-    onSecondary: string;
-    onBackground: string;
-    onSurface: string;
-    onDisabled: string;
 };
 
 export type SizeTokens = {
@@ -88,12 +85,12 @@ export type StyleTokens = {
 //#region Semantics
 export type ColorSemantics = {
     text: {
+        main: string;
         primary: string;
         secondary: string;
+        disabled: string;
         success: string;
         error: string;
-        disabled: string;
-        inverse: string;
     };
     surfaces: {
         base: string;

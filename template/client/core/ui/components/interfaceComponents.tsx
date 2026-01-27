@@ -121,13 +121,13 @@ export function Button({
 // };
 type TextProps = RNTextProps & {
     variant?: 'title' | 'subtitle' | 'body' | 'label';
-    colorVariant?: 'primary' | 'secondary';
+    colorVariant?: 'main' | 'primary' | 'secondary' | 'success' | 'error';
     style?: StyleProp<TextStyle>;
 };
 
 export function Text({
     variant = 'body',
-    colorVariant = 'primary',
+    colorVariant = 'main',
     style,
     children,
     ...props
@@ -137,7 +137,7 @@ export function Text({
     const baseStyle = theme?.components?.text?.[variant] ?? {};
     const color =
         theme?.semantics.colors.text[colorVariant] ??
-        theme?.semantics.colors.text.primary;
+        theme?.semantics.colors.text.main;
 
     return (
         <RNText style={[baseStyle, color && { color }, style]} {...props}>
@@ -148,42 +148,46 @@ export function Text({
 
 //#endregion
 
-//#region InputText:string
+//#region Input:string
 {
-    /* <InputText value={"value"} onChange={onChange} style={style}/> */
+    /* <Input value={"value"} onChange={onChange} style={style}/> */
 }
-type Props_InputTextGroup = {
+type Props_InputGroup = {
     container?: StyleProp<TextStyle>;
     placeholder?: StyleProp<TextStyle>;
     focused?: StyleProp<ViewStyle>;
     error?: StyleProp<ViewStyle>;
 };
 
-type InputTextProps = {
+type InputProps = {
+    type?: 'text' | 'number';
+    secureEntry?: boolean;
     value: string;
     name?: string;
     placeholder?: string;
-    onChange?: (val: string, name?: string | null) => void;
-    onFocus?: () => void;
-    onBlur?: () => void;
+    onChange?: (val: string | number, name?: string | null) => void;
+    onFocus?: (...args: unknown[]) => void;
+    onBlur?: (...args: unknown[]) => void;
     error?: boolean;
     variant?:
-        | 'primary'
-        | 'secondary'
-        | 'success'
-        | 'error'
-        | 'disabled'
-        | 'inverse';
-    style?: Props_InputTextGroup;
+    | 'main'
+    | 'primary'
+    | 'secondary'
+    | 'success'
+    | 'error'
+    | 'disabled';
+    style?: Props_InputGroup;
 };
-const style_inner_InputText = StyleSheet.create({
+const style_inner_Input = StyleSheet.create({
     container: {
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
     },
 });
-export function InputText({
+export function Input({
+    type = 'text',
+    secureEntry = false,
     value,
     name,
     placeholder = '',
@@ -192,41 +196,48 @@ export function InputText({
     onBlur,
     error = false,
     style = {},
-    variant = 'primary',
+    variant = 'main',
     ...props
-}: InputTextProps) {
+}: InputProps) {
     const { theme } = useStyleContext();
     const [focused, setFocused] = useState(false);
 
     const handleChange = (val: string) => {
-        onChange?.(val, name ?? null);
+        switch (type) {
+            case 'text':
+                onChange?.(val, name ?? null);
+                break;
+            case 'number':
+                if (!isNaN(Number(val))) onChange?.(Number(val), name ?? null);
+                break;
+        }
     };
 
-    const handleBlur = () => {
+    const handleBlur = (...args: unknown[]) => {
         setFocused(false);
-        onBlur?.();
+        onBlur?.(...args);
     };
 
-    const handleFocus = () => {
+    const handleFocus = (...args: unknown[]) => {
         setFocused(true);
-        onFocus?.();
+        onFocus?.(...args);
     };
 
     const base = theme?.components.input;
     const color =
         theme?.semantics.colors.text[variant] ??
-        theme?.semantics.colors.text.primary;
+        theme?.semantics.colors.text.main;
 
     return (
         <RNTextInput
-            value={value}
+            value={secureEntry ? '•'.repeat(value.length) : value}
             onChangeText={handleChange}
             onFocus={handleFocus}
             onBlur={handleBlur}
             placeholder={placeholder}
             placeholderTextColor={base?.placeholder.color}
             style={[
-                style_inner_InputText.container,
+                style_inner_Input.container,
                 base?.container,
 
                 focused && base?.focusedBorder,
@@ -309,7 +320,7 @@ export function Modal({
                 style,
             ]}
         >
-            <RNPressable style={[style_inner_Modal.content]} onPress={() => {}}>
+            <RNPressable style={[style_inner_Modal.content]} onPress={() => { }}>
                 {children}
             </RNPressable>
         </RNPressable>

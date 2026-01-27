@@ -6,20 +6,20 @@ interface FetchOptions {
     signal?: AbortSignal;
 }
 
-export interface FetchRequestOptions<T = unknown> {
+export interface FetchRequestOptions {
     url: string;
     method?: 'GET' | 'POST' | 'PUT' | 'DELETE' | 'PATCH' | 'HEAD' | 'OPTIONS';
-    data?: T | FormData;
+    data?: unknown;
     headers?: Record<string, string>;
     timeout?: number;
     credentials?: 'omit' | 'same-origin' | 'include';
     cache?:
-        | 'default'
-        | 'no-store'
-        | 'reload'
-        | 'no-cache'
-        | 'force-cache'
-        | 'only-if-cached';
+    | 'default'
+    | 'no-store'
+    | 'reload'
+    | 'no-cache'
+    | 'force-cache'
+    | 'only-if-cached';
     redirect?: 'follow' | 'error' | 'manual';
 }
 
@@ -31,7 +31,7 @@ export interface FetchResponse<T> {
     raw: Response;
 }
 
-export async function fetchRequest<T = unknown>({
+export default async function fetchRequest<T = unknown>({
     url,
     method = 'POST',
     data,
@@ -40,7 +40,7 @@ export async function fetchRequest<T = unknown>({
     credentials = 'include',
     cache = 'no-store',
     redirect = 'follow',
-}: FetchRequestOptions<T>): Promise<FetchResponse<T>> {
+}: FetchRequestOptions): Promise<FetchResponse<T>> {
     if (!url.trim()) {
         return {
             success: false,

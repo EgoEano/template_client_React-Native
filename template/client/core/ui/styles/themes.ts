@@ -7,31 +7,30 @@ import type {
 
 export const templateTokens: StyleTokens = {
     colors: {
-        primary: '#1f1f1f',
-        primaryVariant: '#000000',
-        secondary: '#ffffff',
-        secondaryVariant: '#00004a',
+        background: '#F5F6FA',
+        surface: '#FFFFFF',
 
+        primary: '#1f1f1f',
+        primaryVariant: '#3c3c3cff',
+        secondary: '#000d45ff',
+        secondaryVariant: '#001264ff',
+
+        onSurface: '#1f1f1f',
+        onPrimary: '#F5F6FA',
+        onSecondary: '#F5F6FA',
+        onDisabled: '#c0c0c0ff',
+
+        disabled: '#CED0CE',
         success: '#3CB371',
         warning: '#e6cf00',
         error: '#c23434',
-
-        background: '#F5F6FA',
-        surface: '#FFFFFF',
-        disabled: '#CED0CE',
         backdrop: '#1f1f1f',
-
-        onPrimary: '#F5F6FA',
-        onSecondary: '#1f1f1f',
-        onBackground: '#1f1f1f',
-        onSurface: '#1f1f1f',
-        onDisabled: '#888888',
     },
     sizes: {
         spacing: {
             xs: 4,
             sm: 8,
-            md: 16,
+            md: 12,
             lg: 24,
             xl: 32,
         },
@@ -80,12 +79,12 @@ export const templateTokens: StyleTokens = {
 export const createSemantics = (tokens: StyleTokens): StyleSemantics => ({
     colors: {
         text: {
+            main: tokens.colors.onSurface,
             primary: tokens.colors.onPrimary,
             secondary: tokens.colors.onSecondary,
+            disabled: tokens.colors.onDisabled,
             success: tokens.colors.success,
             error: tokens.colors.error,
-            disabled: tokens.colors.onDisabled,
-            inverse: tokens.colors.onPrimary,
         },
         surfaces: {
             base: tokens.colors.background,
@@ -98,8 +97,8 @@ export const createSemantics = (tokens: StyleTokens): StyleSemantics => ({
             hovered: tokens.colors.secondary,
         },
         borders: {
-            default: tokens.colors.primary,
-            focused: tokens.colors.primaryVariant,
+            default: tokens.colors.primaryVariant,
+            focused: tokens.colors.primary,
             error: tokens.colors.error,
         },
         buttons: {
@@ -120,7 +119,7 @@ export const createSemantics = (tokens: StyleTokens): StyleSemantics => ({
             },
             error: {
                 bg: tokens.colors.error,
-                text: tokens.colors.onPrimary,
+                text: tokens.colors.primary,
                 border: tokens.colors.error,
             },
             disabled: {
@@ -252,7 +251,7 @@ export const createComponents = (
             },
             text: {
                 color: semantics.colors.buttons.disabled.text,
-                fontSize: semantics.typography.label.fontSize,
+                fontSize: semantics.typography.body.fontSize,
                 fontWeight: semantics.typography.label.fontWeight,
             },
         },
@@ -287,7 +286,7 @@ export const createComponents = (
             padding: tokens.sizes.spacing.md,
         },
         placeholder: {
-            color: semantics.colors.text.secondary,
+            color: semantics.colors.text.disabled,
             fontSize: semantics.typography.body.fontSize,
         },
         focusedBorder: {
@@ -344,25 +343,25 @@ export const createComponents = (
     },
     text: {
         title: {
-            color: semantics.colors.text.primary,
+            color: semantics.colors.text.main,
             fontSize: semantics.typography.title.fontSize,
             fontWeight: semantics.typography.title.fontWeight,
             lineHeight: semantics.typography.title.lineHeight,
         },
         subtitle: {
-            color: semantics.colors.text.primary,
+            color: semantics.colors.text.main,
             fontSize: semantics.typography.subtitle.fontSize,
             fontWeight: semantics.typography.subtitle.fontWeight,
             lineHeight: semantics.typography.subtitle.lineHeight,
         },
         body: {
-            color: semantics.colors.text.primary,
+            color: semantics.colors.text.main,
             fontSize: semantics.typography.body.fontSize,
             fontWeight: semantics.typography.body.fontWeight,
             lineHeight: semantics.typography.body.lineHeight,
         },
         label: {
-            color: semantics.colors.text.primary,
+            color: semantics.colors.text.main,
             fontSize: semantics.typography.label.fontSize,
             fontWeight: semantics.typography.label.fontWeight,
         },
