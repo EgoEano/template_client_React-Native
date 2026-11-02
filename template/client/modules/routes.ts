@@ -1,17 +1,24 @@
-import type { RouteNode } from '../core/types/types';
+import type { RouteNode, RouteNodePath } from '../core/types/types';
+import { createRouteMap } from '../core/utils/routeUtils';
 
 import MainRoutes from './main/routes';
+import getAppConfig from '../core/services/utils/appConfigHandler';
 
-const appRoot: RouteNode = {
+export const appRoot: RouteNode = {
     path: '',
-    serverBasePath: '', //set path to web app
+    name: 'navigation.root',
+    serverBasePath: getAppConfig().urls.serverBasePath, //set path to web app
+    options: { navTreeShown: false },
     optionsNavigator: {
         type: 'stack',
         options: {
             headerShown: false,
         },
     },
-    children: [MainRoutes],
+    children: [
+        MainRoutes,
+    ],
 };
 
+export const routeMap: RouteNodePath = createRouteMap(appRoot);
 export default appRoot;

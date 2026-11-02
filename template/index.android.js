@@ -1,3 +1,3 @@
-import initMobileApp from './client/app/mobile_App';
+import init from './client/app/initNative';
 
-initMobileApp();
+init();

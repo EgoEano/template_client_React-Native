@@ -1,10 +1,12 @@
 // webpack.config.js
 const path = require('path');
+const webpack = require('webpack');
 const HtmlWebpackPlugin = require('html-webpack-plugin');
 const MiniCssExtractPlugin = require('mini-css-extract-plugin');
 const TerserPlugin = require('terser-webpack-plugin');
 const WebpackObfuscator = require('webpack-obfuscator');
 const CssMinimizerPlugin = require('css-minimizer-webpack-plugin');
+const HtmlInlineScriptPlugin = require('html-inline-script-webpack-plugin');
 const dotenv = require('dotenv');
 //const {BundleAnalyzerPlugin} = require('webpack-bundle-analyzer');
 
@@ -14,8 +16,16 @@ const clientDevView = 'index';
 const clientEntries = { index: './index.web.ts' };
 const __DEV_PORT = process.env.DEV_PORT || 12345;
 const __isDevelopment = process.env.NODE_ENV === 'development';
+const __isLocalhost = false;
+
+const __INLINE = process.env.INLINE === 'true';
+const IS_INLINE = __INLINE;
 
 const clientPlugins = [
+    new webpack.DefinePlugin({
+        'process.env.INLINE': JSON.stringify(IS_INLINE),
+        __DEV__: JSON.stringify(process.env.NODE_ENV !== 'production'),
+    }),
     !__isDevelopment &&
         new WebpackObfuscator(
             {
@@ -25,13 +35,17 @@ const clientPlugins = [
             },
             ['**/modules.*.js'],
         ),
-    new MiniCssExtractPlugin({
+        !IS_INLINE && new MiniCssExtractPlugin({
         filename: __isDevelopment
             ? '[name]/[name].css'
             : ({ chunk }) =>
                   chunk.name === 'main'
                       ? '[name].[contenthash].css'
                       : '[name]/[name].[contenthash].css',
+    }),
+    new webpack.IgnorePlugin({
+        resourceRegExp: /initializers/,
+        contextRegExp: /react-native-worklets/,
     }),
     //new BundleAnalyzerPlugin()
 ].filter(Boolean);
@@ -40,18 +54,20 @@ Object.keys(clientEntries).forEach((k) => {
     clientPlugins.push(
         new HtmlWebpackPlugin({
             template: './client/core/ui/assets/template.html',
-            favicon: './client/core/ui/assets/images/favicon.png',
+            favicon: IS_INLINE ? undefined : './client/core/ui/assets/images/favicon.png',
             filename: `${k}/${k}.html`,
             inject: 'body',
-            chunks: [
-                'modules',
-                'services',
-                'components',
-                'theme',
-                'styles',
-                'locales',
-                k,
-            ],
+            chunks: IS_INLINE 
+                ? [k]
+                : [
+                    'modules',
+                    'services',
+                    'components',
+                    'theme',
+                    'styles',
+                    'locales',
+                    k,
+                ],
             minify: !__isDevelopment && {
                 collapseWhitespace: true,
                 removeComments: true,
@@ -67,6 +83,17 @@ Object.keys(clientEntries).forEach((k) => {
         }),
     );
 });
+
+if (IS_INLINE) {
+    clientPlugins.push(
+        new HtmlInlineScriptPlugin({
+            scriptMatchPattern: [/.+\.js$/],
+        }),
+        new webpack.optimize.LimitChunkCountPlugin({
+            maxChunks: 1,
+        })
+    )
+};
 
 module.exports = {
     name: 'client',
@@ -97,9 +124,12 @@ module.exports = {
             'react-native/Libraries/Renderer/shims/ReactNative':
                 'react-native-web/dist/cjs/exports/ReactNative',
             'react-native$': 'react-native-web',
+            'lodash-es': 'lodash',
         },
     },
     devServer: {
+        host: __isLocalhost ? '127.0.0.1' : '0.0.0.0',
+        port: __DEV_PORT,
         static: {
             directory: path.join(__dirname, 'public'),
             publicPath: '/',
@@ -110,13 +140,19 @@ module.exports = {
         liveReload: true,
         open: true,
         compress: true,
-        port: __DEV_PORT,
         devMiddleware: { publicPath: '/' },
         watchFiles: ['client/**/*'],
+        client: {
+            overlay: {
+              errors: true,
+              warnings: true,
+            },
+          },
     },
     optimization: {
         usedExports: true,
-        splitChunks: __isDevelopment
+        concatenateModules: true,
+        splitChunks: (IS_INLINE || __isDevelopment)
             ? false
             : {
                   chunks: 'all',
@@ -153,7 +189,7 @@ module.exports = {
                       },
                   },
               },
-        runtimeChunk: 'single',
+        runtimeChunk: IS_INLINE ? false : 'single',
         minimize: !__isDevelopment,
         minimizer: [
             new TerserPlugin({
@@ -197,14 +233,16 @@ module.exports = {
             {
                 test: /\.css$/,
                 use: [
-                    MiniCssExtractPlugin.loader,
+                    IS_INLINE
+                        ? 'style-loader'
+                        : MiniCssExtractPlugin.loader,
                     'css-loader',
                     'postcss-loader',
                 ],
             },
             {
                 test: /\.(png|jpe?g|gif|svg)$/i,
-                type: 'asset/resource',
+                type: IS_INLINE ? 'asset/inline' : 'asset/resource',
                 parser: { dataUrlCondition: { maxSize: 8192 } },
                 generator: {
                     filename:
@@ -216,7 +254,7 @@ module.exports = {
             },
             {
                 test: /\.(woff|woff2|eot|ttf|otf)$/i,
-                type: 'asset/resource',
+                type: IS_INLINE ? 'asset/inline' : 'asset/resource',
                 generator: {
                     filename:
                         'assets/fonts/' +

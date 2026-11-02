@@ -1,32 +1,17 @@
+import { isHeaderBarButtonsAvailableForCurrentPlatform } from 'react-native-screens/lib/typescript/utils';
 import { RouteNode } from '../../core/types/types';
-import { FirstScreen } from './screens/first';
-import { SecondScreen } from './screens/second';
+import { MainScreen } from './screens/main';
 
 const mainRoutes: RouteNode = {
     path: '',
+    name: 'navigation.main',
     optionsNavigator: {
         type: 'tabs',
         options: {
             headerShown: false,
         },
     },
-    children: [
-        {
-            path: '',
-            name: 'Main',
-            component: FirstScreen,
-        },
-        {
-            path: 'First',
-            name: 'First',
-            component: FirstScreen,
-        },
-        {
-            path: 'Second',
-            name: 'Second',
-            component: SecondScreen,
-        },
-    ],
+    component: MainScreen,
 };
 
 export default mainRoutes;

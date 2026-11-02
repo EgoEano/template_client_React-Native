@@ -8,11 +8,11 @@
         "allowSyntheticDefaultImports": true,
         "paths": {
             "@client/*": ["client/*"],
-            "@client/core/*": ["client/core/*"],
-            "@client/services/*": ["client/core/services/*"],
-            "@client/ui/*": ["client/core/ui/*"],
-            "@client/modules/*": ["client/modules/*"],
-            "@client/app/*": ["client/app/*"],
+            "@core/*": ["client/core/*"],
+            "@services/*": ["client/core/services/*"],
+            "@ui/*": ["client/core/ui/*"],
+            "@modules/*": ["client/modules/*"],
+            "@app/*": ["client/app/*"],
             "@types/*": ["client/core/types/*"]
         }
     },

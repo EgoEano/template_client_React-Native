@@ -1,0 +1,30 @@
+{
+    "name": "app",
+    "displayName": "app",
+    "hostUrl": "http://127.0.0.1:3000",
+    "settings": {
+        "language": {
+            "keys": {
+                "current": "system.lang.current"
+            }
+        },
+        "theme": {
+            "keys": {
+                "currentTheme": "system.theme.currentTheme",
+                "currentMode": "system.theme.currentMode"
+            }
+        }
+    },
+    "urls": {
+        "serverBasePath": ""
+    },
+    "authRoutes": {
+        "login": "/auth/login",
+        "logout": "/auth/logout",
+        "register": "/auth/register",
+        "refresh": "/auth/refresh",
+        "me": "/auth/me"
+    },
+    "modules": {
+    }
+}

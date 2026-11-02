@@ -1,95 +1,88 @@
-import React, {
-    createContext,
-    useContext,
-    useState,
-    useMemo,
-    useCallback,
-    useRef,
-} from 'react';
+import React, { createContext, useContext, useState, useCallback, useMemo, useEffect } from 'react';
 import languages from '../../ui/locales/languages';
 import { logWarn } from '../utils/loggerService';
+import { LanguageContextType, TranslationVariables } from '../../types/language';
+import { findBestAvailableLanguage, getSystemLanguage } from '../utils/system';
+import Storage from '../storage/storageService'
+import getAppConfig from '../utils/appConfigHandler';
 
-type TranslationPack = Record<string, string>;
-type TranslationVariables = Record<string, string>;
-
-type Language = Record<string, TranslationPack>;
-
-type TranslationSearch = (key: string, vars?: Record<string, string>) => string;
-
-type LanguageContextType = {
-    t: TranslationSearch;
-    currentLanguage: string;
-    changeLanguage: (langCode: string) => void;
-    setLanguagePack: (pack: TranslationPack) => void;
-};
 
 const LanguageContext = createContext<LanguageContextType | null>(null);
 
 export const LanguageProvider = ({
     children,
+    defaultLanguage = 'en-US',
 }: {
     children: React.ReactNode;
+    defaultLanguage?: string;
 }) => {
-    const [version, setVersion] = useState(0);
-    const currentLanguageRef = useRef<string>('en-US');
-    const overriddenLangPack = useRef<TranslationPack | null>(null);
+    const [language, setLanguageState] = useState(defaultLanguage);
+    const [isReady, setIsReady] = useState(false);
 
-    const changeLanguage = useCallback((lang: string) => {
-        if (lang === currentLanguageRef.current) return;
-        if (lang in languages) {
-            currentLanguageRef.current = lang;
-            setVersion((v) => v + 1);
-        } else {
-            logWarn(`LanguageProvider. Language '${lang}' not found`);
+    const setLanguage = useCallback((lang: string) => {
+        if (!(lang in languages)) {
+            logWarn(`LanguageProvider: language '${lang}' not found`);
+            return;
         }
+        setLanguageState(lang);
+        const storageKey = getAppConfig().settings.language.keys.current;
+        Storage.set(storageKey, lang);
     }, []);
 
-    const setLanguagePack = useCallback((lang: TranslationPack) => {
-        if (typeof lang === 'object') {
-            overriddenLangPack.current = lang;
-            setVersion((v) => v + 1);
-        } else {
-            logWarn(`LanguageProvider. Invalid TranslationPack`);
-        }
+    const getLanguages = useCallback(() => {
+        return Object.keys(languages);
     }, []);
-
-    const translations = useMemo<TranslationPack>(() => {
-        return (
-            overriddenLangPack.current ??
-            (languages as Language)[currentLanguageRef.current] ??
-            {}
-        );
-    }, [version]);
 
     const t = useCallback(
         (key: string, vars: TranslationVariables = {}) => {
-            if (!key || typeof key !== 'string') {
-                logWarn(`Missing or wrong translation key: '${key}'`);
-                return '';
-            }
-            let text = translations[key] || key;
-            Object.keys(vars).forEach((varKey) => {
-                text = text.replace(`{{${varKey}}}`, vars[varKey]);
+            if (!key) return '';
+
+            const text = languages[language]?.[key] ?? languages[defaultLanguage]?.[key] ?? key;
+
+            if (Object.keys(vars).length === 0) return text;
+
+            return text.replace(/{{(.*?)}}/g, (match, p1) => {
+                const value = vars[p1.trim()];
+                return value !== undefined ? String(value) : match;
             });
-            return text;
         },
-        [translations],
+        [language, defaultLanguage],
     );
 
-    const value = useMemo<LanguageContextType>(
-        () => ({
-            t,
-            get currentLanguage() {
-                return currentLanguageRef.current;
-            },
-            changeLanguage,
-            setLanguagePack,
-        }),
-        [version],
-    );
+    useEffect(() => {
+        const initLanguage = async () => {
+            try {
+                const storageKey = getAppConfig().settings.language.keys.current;
+                const savedLang = await Storage.get(storageKey);
+                
+                const bestLang = findBestAvailableLanguage(
+                    savedLang ?? getSystemLanguage(),
+                    languages,
+                    defaultLanguage
+                );
+
+                setLanguageState(bestLang);
+            } catch (error) {
+                logWarn("Failed to load language from storage", error);
+            } finally {
+                setIsReady(true);
+            }
+        };
+        initLanguage();
+    }, []);
+
+    const contextValue = useMemo(() => ({
+        t,
+        language,
+        setLanguage,
+        getLanguages
+    }), [t, language, setLanguage, getLanguages]);
+
+
+    if (!isReady) return null;
 
     return (
-        <LanguageContext.Provider value={value}>
+        <LanguageContext.Provider value={contextValue}>
             {children}
         </LanguageContext.Provider>
     );

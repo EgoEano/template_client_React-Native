@@ -1,9 +1,10 @@
-import { Text, Button, View, ModalCard, Card } from './interfaceComponents';
+import { Text, Button, ModalCard, Modal } from './interfaceComponents';
 import React, { useEffect, useMemo } from 'react';
-import { StyleSheet } from 'react-native';
-import { useStyleContext } from '../../services/providers/styleProvider';
+import { View, StyleSheet, ScrollView, Pressable } from 'react-native';
+import { useStyleAdapter, useStyleContext } from '../../services/providers/styleProvider';
 
-import type { NotifyItem, DialogItem } from '../../types/notificationTypes';
+import type { NotifyItem, DialogItem, ModalItemExtras } from '../../types/notification';
+import { notifStyles } from '../styles/styles';
 
 export function NotifyView({
     queue,
@@ -14,27 +15,10 @@ export function NotifyView({
     timeout: number;
     handleClose: (id: string) => void;
 }) {
-    const styles = useMemo(
-        () =>
-            StyleSheet.create({
-                notifyWrapper: {
-                    position: 'absolute',
-                    alignItems: 'flex-start',
-                    left: 10,
-                    bottom: 10,
-                    maxWidth: 500,
-                },
-            }),
-        [],
-    );
+    const styles = useStyleAdapter(notifStyles);
 
     return (
-        <View
-            isScrollable={false}
-            isAllowHorizontalScroll={false}
-            showsVerticalScrollIndicator={false}
-            style={styles.notifyWrapper}
-        >
+        <View style={styles.notifyWrapper}>
             {queue.map((item) => (
                 <NotifyCard
                     key={item.id}
@@ -57,23 +41,7 @@ export function NotifyCard({
     handleClose: (id: string) => void;
 }) {
     const { id, message, header } = item;
-    const { theme } = useStyleContext();
-
-    const styles = useMemo(
-        () =>
-            StyleSheet.create({
-                notifyCard: {
-                    paddingVertical: theme?.tokens.sizes.spacing.sm ?? 8,
-                    paddingHorizontal: theme?.tokens.sizes.spacing.md ?? 16,
-                    shadowColor: '#000', // Fallback as shadow token might not exist
-                    shadowOffset: { width: 0, height: 2 },
-                    shadowOpacity: 0.1,
-                    shadowRadius: 4,
-                    elevation: 3,
-                },
-            }),
-        [theme],
-    );
+    const styles = useStyleAdapter(notifStyles);
 
     useEffect(() => {
         const tm = setTimeout(() => {
@@ -84,14 +52,21 @@ export function NotifyCard({
     }, [id, timeout, handleClose]);
 
     return (
-        <Card
-            style={{
-                card: styles.notifyCard,
-            }}
+        <Pressable 
+            style={styles.notifyCard}
+            onLongPress={() => handleClose(id)}
         >
-            {header && <Text>{header}</Text>}
-            <Text>{message}</Text>
-        </Card>
+            {header && <Text
+                numberOfLines={1}
+                ellipsizeMode="tail" 
+                style={styles.notifyHeaderText}
+            >{header}</Text>}
+            <Text
+                numberOfLines={2}
+                ellipsizeMode="tail" 
+                style={styles.notifyMessageText}
+            >{message}</Text>
+        </Pressable>
     );
 }
 
@@ -105,35 +80,7 @@ export function DialogView({
     cancelText?: string;
 }) {
     const { header, message, actions, resolve } = item;
-    const { theme } = useStyleContext();
-
-    const styles = useMemo(
-        () =>
-            StyleSheet.create({
-                confirmModal: {
-                    minWidth: 200,
-                    maxWidth: '100%',
-                    paddingVertical: 25,
-                    paddingHorizontal: 10,
-                },
-                confirmTextArea: {
-                    maxWidth: '90%',
-                    gap: 10,
-                    marginBottom: 30,
-                },
-                confirmButtonArea: {
-                    width: '100%',
-                    display: 'flex',
-                    justifyContent: 'space-around',
-                    flexDirection: 'row',
-                },
-                confirmButton: {
-                    paddingVertical: theme?.tokens.sizes.spacing.xs ?? 5,
-                    paddingHorizontal: theme?.tokens.sizes.spacing.md ?? 15,
-                },
-            }),
-        [theme],
-    );
+    const styles = useStyleAdapter(notifStyles);
 
     const handleAction = async (resolveValue: boolean, action?: () => void) => {
         handleClose();
@@ -150,13 +97,14 @@ export function DialogView({
             isHasCross={false}
             closable={false}
             style={{
-                card: styles.confirmModal,
+                wrapper: styles.confirmModal,
+                card: styles.confirmCard,
             }}
         >
-            <View style={styles.confirmTextArea}>
+            <ScrollView style={styles.confirmTextArea}>
                 {header && <Text variant={'subtitle'}>{header}</Text>}
                 <Text>{message}</Text>
-            </View>
+            </ScrollView>
             <View style={styles.confirmButtonArea}>
                 {actions.map((action, index) => (
                     <Button
@@ -171,6 +119,70 @@ export function DialogView({
                     />
                 ))}
             </View>
+        </ModalCard>
+    );
+}
+
+// export function OverlayHost({
+//     children,
+//     onClose,
+//     isClosable = true,
+// }: {
+//     children: React.ReactNode;
+//     onClose: () => void;
+//     isClosable?: boolean;
+// }) {
+//     return (
+//         <Modal 
+//             isShow={true}
+//             setIsShow={onClose}
+//             closable={isClosable}
+//         >
+//             {children}
+//         </Modal>
+//     );
+// }
+
+export function ModalHost({
+    children,
+    onClose,
+    isClosable = true,
+    extras,
+}: {
+    children: React.ReactNode;
+    onClose: () => void;
+    isClosable?: boolean;
+    extras?: ModalItemExtras
+}) {
+    return (
+        extras?.modal?.isOverlay ?
+        <Modal 
+            isShow={true}
+            setIsShow={onClose}
+            closable={extras?.modal?.isClosable ?? isClosable}
+            style={{
+                wrapper: extras?.style?.wrapper ?? {},
+                content: extras?.style?.content ?? {}
+            }}
+        >
+            {children}
+        </Modal>
+        :
+        <ModalCard
+            isShow={true}
+            setIsShow={onClose}
+            closable={extras?.modal?.isClosable ?? isClosable}
+            isHasCross={extras?.modal?.hasCross ?? true}
+            isScrollable={extras?.modal?.isScrollable}
+            showsVerticalScrollIndicator={false}
+            style={{
+                wrapper: extras?.style?.wrapper ?? {},
+                content: extras?.style?.content ?? {},
+                modal: extras?.style?.modal ?? {},
+                card: extras?.style?.card ?? {},
+            }}
+        >
+            {children}
         </ModalCard>
     );
 }

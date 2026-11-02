@@ -1,14 +1,5 @@
-import type { RouteNode } from '../types/types';
+import type { RouteNode, RouteNodePath } from '../types/types';
 
-/**
- * Generates a unique mobile screen name for a route node.
- * Handles empty paths by creating unique identifiers based on hierarchy.
- *
- * @param node - The route node
- * @param parentPath - The accumulated parent path (for hierarchy tracking)
- * @param index - The index of this node among siblings
- * @returns A unique screen name for mobile navigation
- */
 export function generateMobileName(
     node: RouteNode,
     parentPath: string = '',
@@ -37,14 +28,6 @@ export function generateMobileName(
     return node.path.replace(/^\//, '');
 }
 
-/**
- * Normalizes a route tree for mobile navigation by assigning unique screen names.
- * This allows using empty paths for web while ensuring unique names for mobile.
- *
- * @param node - The root route node
- * @param parentPath - Internal: accumulated parent path
- * @returns A new route tree with name assigned to all nodes
- */
 export function normalizeMobileRoutes(
     node: RouteNode,
     parentPath: string = '',
@@ -71,13 +54,34 @@ export function normalizeMobileRoutes(
     };
 }
 
-/**
- * Gets the mobile screen name for a route node.
- * Returns name if set, otherwise returns the path.
- *
- * @param node - The route node
- * @returns The screen name to use for mobile navigation
- */
 export function getMobileScreenName(node: RouteNode): string {
     return node.name || node.path || '_unnamed';
+}
+
+
+export function createRouteMap(
+    node: RouteNode,
+    parentPath = ""
+): RouteNodePath {
+    const fullPath = joinPaths(parentPath, node.path);
+
+    return {
+        path: fullPath,
+        name: node.name,
+        options: node.options ?? null,
+        ...(node.children?.length
+            ? {
+                children: node.children.map((child) =>
+                    createRouteMap(child, fullPath)
+                ),
+            }
+            : {}
+        ),
+    };
+}
+
+function joinPaths(parent: string, child: string): string {
+    return `${parent}/${child}`
+        .replace(/\/+/g, "/")      // убираем двойные /
+        .replace(/\/$/, "") || "/"; // корень остается "/"
 }

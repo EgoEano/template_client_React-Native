@@ -1,3 +1,3 @@
-import initWebApp from './client/app/web_App';
+import init from './client/app/initWeb';
 
-initWebApp();
+init();

@@ -7,6 +7,7 @@ import React, {
 } from 'react';
 import {
     DialogView,
+    ModalHost,
     NotifyView,
 } from '../../ui/components/notificationComponents';
 
@@ -15,7 +16,9 @@ import type {
     NotificationProviderProps,
     NotifyItem,
     DialogItem,
-} from '../../types/notificationTypes';
+    ModalItem,
+    ModalItemExtras,
+} from '../../types/notification';
 
 const NotifyContext = createContext<NotificationProviderContextType | null>(
     null,
@@ -29,27 +32,30 @@ export const NotificationProvider: React.FC<NotificationProviderProps> = ({
 
     const notifyQueue = useRef<NotifyItem[]>([]);
     const dialogQueue = useRef<DialogItem[]>([]);
+    const modalQueue = useRef<ModalItem[]>([]);
 
-    const [currentNotify, setCurrentNotify] = useState<NotifyItem[]>([]);
-    const [currentDialog, setCurrentDialog] = useState<DialogItem | null>(null);
+    const [notify, setNotify] = useState<NotifyItem[]>([]);
+    const [dialog, setDialog] = useState<DialogItem | null>(null);
+    const [modals, setModals] = useState<ModalItem[]>([]);
 
+    // Notify
     const pushNotify = (item: Omit<NotifyItem, 'id'>) => {
         const fullItem: NotifyItem = {
             ...item,
             id: String(Math.random() * 1000),
         };
 
-        if (currentNotify.length >= MAX_STACK_SIZE) {
+        if (notify.length >= MAX_STACK_SIZE) {
             notifyQueue.current.push(fullItem);
         } else {
-            setCurrentNotify((q) => [...q, fullItem]);
+            setNotify((q) => [...q, fullItem]);
         }
     };
-
     const removeNotify = (id: string) => {
-        setCurrentNotify((q) => q.filter((n) => n.id !== id));
+        setNotify((q) => q.filter((n) => n.id !== id));
     };
 
+    // Dialog
     const pushDialog = (
         item: Omit<DialogItem, 'resolve'>,
     ): Promise<boolean> => {
@@ -58,51 +64,120 @@ export const NotificationProvider: React.FC<NotificationProviderProps> = ({
                 ...item,
                 resolve,
             };
-            if (currentDialog) {
+            if (dialog) {
                 dialogQueue.current.push(fullItem);
             } else {
-                setCurrentDialog(fullItem);
+                setDialog(fullItem);
             }
         });
     };
+    const pushDialogTop = (
+        item: Omit<DialogItem, 'resolve'>,
+    ): Promise<boolean> => {
+        return new Promise((resolve) => {
+            const fullItem: DialogItem = {
+                ...item,
+                resolve,
+            };
+            if (dialog) {
+                dialogQueue.current.unshift(fullItem);
+            } else {
+                setDialog(fullItem);
+            }
+        });
+    };
+    const removeDialog = () => setDialog(null);
 
-    const removeDialog = () => setCurrentDialog(null);
+    // Modal
+    const pushModal = (render: () => React.ReactNode, extras?: ModalItemExtras) => {
+        const item: ModalItem = {
+            id: String(Math.random()),
+            render,
+            extras,
+        };
+    
+        if (modals.length > 0) {
+            modalQueue.current.push(item);
+        } else {
+            setModals([item]);
+        }
+    };
+    const pushModalTop = (render: () => React.ReactNode, extras?: ModalItemExtras) => {
+        const item: ModalItem = {
+            id: String(Math.random()),
+            render,
+            extras,
+        };
 
+        setModals(prev => [...prev, item]);
+    };
+    const removeModal = (id?: string) =>  {
+        if (id)
+            setModals(prev => prev.filter(m => m.id !== id));
+        else
+            setModals(prev => prev.slice(0, -1));
+    };
+
+    //Effects
     useEffect(() => {
         if (
-            currentNotify.length < MAX_STACK_SIZE &&
+            notify.length < MAX_STACK_SIZE &&
             notifyQueue.current.length > 0
         ) {
             const nextNotify = notifyQueue.current.shift();
             if (nextNotify) {
-                setCurrentNotify((q) => [...q, nextNotify]);
+                setNotify((q) => [...q, nextNotify]);
             }
         }
-    }, [currentNotify]);
+    }, [notify]);
 
     useEffect(() => {
-        if (!currentDialog && dialogQueue.current.length > 0) {
+        if (!dialog && dialogQueue.current.length > 0) {
             const nextDialog = dialogQueue.current.shift();
             if (nextDialog) {
-                setCurrentDialog(nextDialog);
+                setDialog(nextDialog);
             }
         }
-    }, [currentDialog]);
+    }, [dialog]);
+
+    useEffect(() => {
+        if (modals.length == 0 && modalQueue.current.length > 0) {
+            const next = modalQueue.current.shift();
+            if (next) {
+                setModals([next]);
+            }
+        }
+    }, [modals]);
 
     const value = {
         pushNotify,
+        removeNotify,
         pushDialog,
+        pushDialogTop,
+        removeDialog,
+        pushModal,
+        pushModalTop,
+        removeModal
     };
 
     return (
         <NotifyContext.Provider value={value}>
             {children}
-            {currentDialog && (
-                <DialogView item={currentDialog} handleClose={removeDialog} />
+            {modals.length > 0 && modals.map((modal, index) => (
+                <ModalHost
+                    key={modal.id}
+                    extras={modal.extras}
+                    onClose={removeModal}
+                >
+                    {modal.render()}
+                </ModalHost>
+            ))}
+            {dialog && (
+                <DialogView item={dialog} handleClose={removeDialog} />
             )}
-            {currentNotify.length > 0 && (
+            {notify.length > 0 && (
                 <NotifyView
-                    queue={currentNotify}
+                    queue={notify}
                     timeout={NOTIFY_TIMEOUT_SECONDS}
                     handleClose={removeNotify}
                 />

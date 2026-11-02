@@ -5,308 +5,114 @@ import {
     useCallback,
     useMemo,
     useEffect,
-    useRef,
 } from 'react';
-import { Dimensions } from 'react-native';
-import {
-    templateTokens,
-    createSemantics,
-    createComponents,
-} from '../../ui/styles/themes';
-import { logWarn } from '../utils/loggerService';
-
+import themes from '../../ui/styles';
+import getAppConfig from '../utils/appConfigHandler';
+import Storage from '../storage/storageService'
 import type { ReactNode } from 'react';
-import type { Theme, StyleTokens } from '../../types/themeTypes';
+import type { Theme, ThemeMode } from '../../types/theme';
+import { logWarn } from '../utils/loggerService';
+import { Platform, StatusBar, useColorScheme } from 'react-native';
+import { SysValues } from '../../../app/config';
 
-//#region Types
-type DeepPartial<T> = {
-    [P in keyof T]?: T[P] extends object ? DeepPartial<T[P]> : T[P];
-};
 
-interface StyleProviderContext {
-    styles: Record<string, Record<string, any>>;
-    dimensions: CustomDimensions;
-    theme: Theme | null;
-    currentTheme: string | null;
-    themesContainer: Record<string, DeepPartial<StyleTokens>>;
-    initTheme: (name: string) => void;
-    addTheme: (name: string, partialTokens: DeepPartial<StyleTokens>) => void;
+const ThemeContext = createContext<ThemeProviderContext | null>(null);
+
+
+interface ThemeProviderContext {
+    theme: Theme;
+    themeMode: ThemeMode;
+    currentTheme: string;
     selectTheme: (name: string) => void;
-    add: (name: string, styleVariants: any) => boolean;
-    addGroup: (group: Record<string, any>) => boolean;
+    getThemes: () => string[];
+    selectMode: (mode: ThemeMode) => void;
 }
+export function ThemeProvider({ children }: { children: ReactNode }) {
+    const [isReady, setIsReady] = useState(false);
+    const [themeMode, setThemeMode] = useState<ThemeMode>('light');
+    const [currentTheme, setCurrentTheme] = useState<string>('system');
 
-type ScreenCategory = 'compact' | 'spacious';
+    const colorScheme = useColorScheme(); 
+    const isDarkMode = colorScheme === 'dark';
 
-interface DimensionsArgs {
-    window: { width: number; height: number; scale: number; fontScale: number };
-}
+    const theme = useMemo(() => {
+        return themes?.[currentTheme]?.[themeMode] ?? {};
+    }, [themeMode, currentTheme]);
 
-interface CustomDimensions {
-    width: number;
-    height: number;
-    visibleWidth: number;
-    visibleHeight: number;
-}
-//#endregion
-
-const getScreenCategory = (width?: number | null): ScreenCategory =>
-    (width ?? Dimensions.get('window').width) < 1000 ? 'compact' : 'spacious';
-const getDimensions = (): CustomDimensions => {
-    const wndw = Dimensions.get('window');
-    const vv = (globalThis as any).visualViewport;
-    return {
-        width: wndw.width,
-        height: wndw.height,
-        visibleWidth: vv?.width ?? wndw.width,
-        visibleHeight: vv?.height ?? wndw.height,
-    };
-};
-
-const StyleContext = createContext<StyleProviderContext | null>(null);
-
-export const StyleProvider = ({ children }: { children: ReactNode }) => {
-    const [version, setVersion] = useState(0);
-
-    const stylesRef = useRef<Record<string, any>>({});
-    const themeRef = useRef<Theme | null>(null);
-    const themesContainerRef = useRef<Record<string, DeepPartial<StyleTokens>>>(
-        {},
-    );
-    const currentThemeRef = useRef<string | null>(null);
-
-    const screenCategory = useRef<ScreenCategory>(getScreenCategory());
-    const dimensionsRef = useRef<CustomDimensions>(getDimensions());
-
-    const isThemeInitialized = useRef<boolean>(false);
-
-    const updateUI = () => setVersion((v) => v + 1);
-
-    const add = useCallback((name: string, styleVariants: any): boolean => {
-        if (typeof name !== 'string' || name.trim().length === 0) {
-            logWarn(
-                `StyleServiceProvider. Style name must be a non-empty string.`,
-            );
-            return false;
-        }
-        if (!styleVariants || typeof styleVariants !== 'object') {
-            logWarn(
-                `StyleServiceProvider. Invalid style object for '${name}'.`,
-            );
-            return false;
-        }
-
-        stylesRef.current[name] = {
-            main: styleVariants?.main || styleVariants || {},
-            compact: styleVariants?.compact || {},
-            spacious: styleVariants?.spacious || {},
-        };
-        return true;
+    const selectTheme = useCallback((thm: string) => {
+        setCurrentTheme(thm);
+        const storageKey = getAppConfig().settings.theme.keys.currentTheme;
+        Storage.set(storageKey, thm);
     }, []);
 
-    const addGroup = (group: Record<string, any>): boolean => {
-        if (!group || typeof group !== 'object') {
-            logWarn('StyleProvider: Invalid group passed to addGroup.');
-            return false;
-        }
-
-        for (const [name, styleVariants] of Object.entries(group)) {
-            add(name, styleVariants);
-        }
-        updateUI();
-        return true;
-    };
-
-    const styles = useMemo<Record<string, Record<string, any>>>(() => {
-        const category = screenCategory.current;
-        const result: Record<string, Record<string, any>> = {};
-        for (const [name, variants] of Object.entries(
-            stylesRef.current as Record<
-                string,
-                {
-                    main?: Record<string, any>;
-                    compact?: Record<string, any>;
-                    spacious?: Record<string, any>;
-                }
-            >,
-        )) {
-            result[name] = {
-                ...(variants.main ?? {}),
-                ...(variants[category as keyof typeof variants] ?? {}),
-            };
-        }
-        return result;
-    }, [version]);
-
-    const addTheme = (
-        name: string,
-        partialTokens: DeepPartial<StyleTokens>,
-    ) => {
-        if (!name || typeof name !== 'string' || name.trim().length === 0) {
-            logWarn(
-                `StyleServiceProvider. Theme name must be a non-empty string.`,
-            );
-            return;
-        }
-        if (!partialTokens || typeof partialTokens !== 'object') {
-            logWarn(
-                `StyleServiceProvider. Invalid theme object for '${name}'.`,
-            );
-            return;
-        }
-        themesContainerRef.current[name] = partialTokens;
-    };
-
-    const selectTheme = (name: string): boolean => {
-        if (currentThemeRef.current === name) return true;
-        const tkns = themesContainerRef.current[name];
-        if (!tkns) return false;
-
-        currentThemeRef.current = name;
-        themeRef.current = buildTheme(tkns);
-        updateUI();
-        return true;
-    };
-
-    const initTheme = (name: string) => {
-        if (isThemeInitialized.current) return;
-        if (!name || typeof name !== 'string' || name.trim().length === 0) {
-            logWarn(
-                `StyleServiceProvider. Theme name must be a non-empty string.`,
-            );
-            return;
-        }
-        const isSelected = selectTheme(name);
-        if (!isSelected) {
-            throw new Error(
-                `StyleServiceProvider. Theme '${name}' is not found.`,
-            );
-        }
-        isThemeInitialized.current = true;
-        updateUI();
-    };
-
-    useEffect(() => {
-        const handleResize = (dims: DimensionsArgs) => {
-            if (!dims.window) return;
-
-            const newCategory = getScreenCategory(dims.window.width);
-            screenCategory.current = newCategory;
-            dimensionsRef.current = getDimensions();
-
-            updateUI();
-        };
-
-        const subscription = Dimensions.addEventListener(
-            'change',
-            handleResize,
-        );
-        return () => subscription?.remove();
+    const getThemeNames = useCallback(() => {
+        return Object.keys(themes);
     }, []);
 
-    useEffect(() => {
-        addTheme('default', templateTokens);
-        initTheme('default');
-    }, [addTheme, initTheme]);
+    const selectMode = useCallback((mode: ThemeMode) => {
+        setThemeMode(mode);
+        const storageKey = getAppConfig().settings.theme.keys.currentMode;
+        Storage.set(storageKey, mode);
+    }, []);
 
-    const value = useMemo<StyleProviderContext>(
-        () => ({
-            styles,
-            get dimensions() {
-                return dimensionsRef.current;
-            },
-            get theme() {
-                return themeRef.current;
-            },
-            get currentTheme() {
-                return currentThemeRef.current;
-            },
-            get themesContainer() {
-                return themesContainerRef.current;
-            },
-            initTheme,
-            addTheme,
-            selectTheme,
-            add,
-            addGroup,
-        }),
-        [version, add, addGroup, initTheme, addTheme, selectTheme],
-    );
+
+    useEffect(() => {
+        const init = async () => {
+            try {
+                const themeKey = getAppConfig().settings.theme.keys.currentTheme;
+                const savedTheme = await Storage.get<string>(themeKey);
+
+                const modeKey = getAppConfig().settings.theme.keys.currentMode;
+                const savedMode = await Storage.get<string>(modeKey);
+                
+                if (savedTheme && savedTheme.length > 0) setCurrentTheme(savedTheme);
+                if (savedMode && savedMode.length > 0) setThemeMode(savedMode as ThemeMode);
+            } catch (error) {
+                logWarn("Failed to load language from storage", error);
+            } finally {
+                setIsReady(true);
+            }
+        };
+        init();
+    }, []);
+    useEffect(() => {
+        StatusBar.setBarStyle(isDarkMode ? 'light-content' : 'dark-content', true);
+        if (Platform.OS === 'android') {
+            StatusBar.setBackgroundColor(isDarkMode ? '#000' : '#fff', true);
+        }
+        const isHidden = Boolean(SysValues.isStatusBarHidden);
+        StatusBar.setHidden(isHidden, 'slide');
+    }, [isDarkMode]);
+
+
+    if (!isReady) return null;
 
     return (
-        <StyleContext.Provider value={value}>{children}</StyleContext.Provider>
+        <ThemeContext.Provider
+            value={{
+                theme,
+                themeMode,
+                currentTheme,
+                selectTheme,
+                getThemes: getThemeNames,
+                selectMode,
+            }}
+        >
+            {children}
+        </ThemeContext.Provider>
     );
 };
 
-export const useStyleContext = (): StyleProviderContext => {
-    const context = useContext(StyleContext);
+export const useStyleContext = (): ThemeProviderContext => {
+    const context = useContext(ThemeContext);
     if (!context) {
-        throw new Error('useStyleContext must be used within a StyleProvider');
+        throw new Error('useThemeContext must be used within a ThemeProvider');
     }
     return context;
 };
 
-export const buildTheme = (
-    partialTokens?: DeepPartial<StyleTokens> | null,
-): Theme => {
-    const mergedTokens: StyleTokens = {
-        colors: partialTokens?.colors
-            ? {
-                  ...templateTokens.colors,
-                  ...(partialTokens?.colors || {}),
-              }
-            : templateTokens.colors,
-        sizes: partialTokens?.sizes
-            ? {
-                  spacing: {
-                      ...templateTokens.sizes.spacing,
-                      ...(partialTokens?.sizes.spacing || {}),
-                  },
-                  radius: {
-                      ...templateTokens.sizes.radius,
-                      ...(partialTokens?.sizes.radius || {}),
-                  },
-                  borderWidth: {
-                      ...templateTokens.sizes.borderWidth,
-                      ...(partialTokens?.sizes.borderWidth || {}),
-                  },
-                  backdrop: {
-                      ...templateTokens.sizes.backdrop,
-                      ...(partialTokens?.sizes.backdrop || {}),
-                  },
-              }
-            : templateTokens.sizes,
-        typography: partialTokens?.typography
-            ? {
-                  fontFamily:
-                      partialTokens?.typography.fontFamily ??
-                      templateTokens.typography.fontFamily,
-                  fontSize: {
-                      ...templateTokens.typography.fontSize,
-                      ...(partialTokens?.typography.fontSize || {}),
-                  },
-                  fontWeight: {
-                      ...templateTokens.typography.fontWeight,
-                      ...(partialTokens?.typography.fontWeight || {}),
-                  },
-                  lineHeight: {
-                      ...templateTokens.typography.lineHeight,
-                      ...(partialTokens?.typography.lineHeight || {}),
-                  },
-              }
-            : templateTokens.typography,
-        elevation: {
-            ...templateTokens.elevation,
-            ...(partialTokens?.elevation || {}),
-        },
-    };
+export function useStyleAdapter<T>(createStylesFunc: (theme: Theme) => T): T {
+    const { theme } = useStyleContext();
 
-    const semantics = createSemantics(mergedTokens);
-    const components = createComponents(mergedTokens, semantics);
-
-    return {
-        tokens: mergedTokens,
-        semantics,
-        components,
-    };
-};
+    return useMemo(() => createStylesFunc(theme), [createStylesFunc, theme]);
+}
